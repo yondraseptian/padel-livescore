@@ -5,6 +5,7 @@ import { MatchCard } from '@/components/match-card';
 import { Standings } from '@/components/standings';
 import { getUpcomingMatches } from '@/lib/match-service';
 import { Activity, Trophy, Users } from 'lucide-react';
+import { Header } from '@/components/header';
 
 export const revalidate = 60; // Revalidate every 60 seconds
 
@@ -29,21 +30,7 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-700 bg-slate-950/95 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Activity className="w-8 h-8 text-amber-500" />
-            <h1 className="text-2xl font-bold text-white">Padel LiveScore</h1>
-          </div>
-          <nav className="flex gap-4">
-            <Link href="/admin/login">
-              <Button variant="outline" size="sm" className="border-slate-600 text-slate-300 hover:bg-slate-800">
-                Admin Panel
-              </Button>
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-12">
