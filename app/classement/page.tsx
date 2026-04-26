@@ -4,6 +4,7 @@ import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Standings } from '@/components/standings';
+import { TournamentStandings } from '@/components/tournament-standings';
 import { Trophy, Medal, Target } from 'lucide-react';
 
 const categoryData = [
@@ -92,6 +93,8 @@ export default function KlasemenPage() {
           <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
             <Standings />
           </div>
+          
+          <TournamentStandings />
         </section>
 
         {/* Info Section */}
@@ -104,15 +107,15 @@ export default function KlasemenPage() {
             </li>
             <li className="flex gap-3">
               <span className="text-amber-500 font-bold">•</span>
-              <span>Poin dihitung berdasarkan set yang dimenangkan dan tingkat kesulitan lawan</span>
+              <span>Poin dihitung berdasarkan set yang dimenangkan (Tim) atau match won (Americano/Mexicano)</span>
             </li>
             <li className="flex gap-3">
               <span className="text-amber-500 font-bold">•</span>
-              <span>Pemain dapat naik atau turun kategori berdasarkan performa bulanan</span>
+              <span>Di format Mexicano, pemain dengan poin berdekatan akan dipasangkan bersama di match selanjutnya</span>
             </li>
             <li className="flex gap-3">
               <span className="text-amber-500 font-bold">•</span>
-              <span>Top 3 pemain di setiap kategori mendapat hadiah eksklusif</span>
+              <span>Top 3 pemain di setiap turnamen mendapat medali eksklusif</span>
             </li>
           </ul>
         </div>

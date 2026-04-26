@@ -65,32 +65,66 @@ export default async function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
           {/* Left Column - Matches (2 columns on large screens) */}
           <div className="lg:col-span-2">
-            {/* Upcoming & Live Matches Section */}
-            <section>
-              <div className="mb-8 flex items-center gap-2">
-                <Activity className="w-6 h-6 text-amber-500" />
-                <h3 className="text-2xl font-bold text-white">Live & Upcoming</h3>
-                {matches.some(m => m.status === 'live') && (
-                  <span className="ml-auto inline-flex items-center gap-1 text-red-500 text-sm font-semibold">
-                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                    LIVE NOW
-                  </span>
+            
+            {/* Live Matches */}
+            <section className="mb-10">
+              <div className="mb-6 flex items-center gap-2">
+                <Activity className="w-6 h-6 text-red-500" />
+                <h3 className="text-2xl font-bold text-white">Live Now</h3>
+                <span className="ml-auto inline-flex items-center gap-1 text-red-500 text-sm font-semibold">
+                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                  {matches.filter(m => m.status === 'live').length} Matches
+                </span>
+              </div>
+              <div className="grid gap-4">
+                {matches.filter(m => m.status === 'live').length > 0 ? (
+                  matches.filter(m => m.status === 'live').map((match) => (
+                    <MatchCard key={match.id} match={match} />
+                  ))
+                ) : (
+                  <div className="text-center py-8 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                    <p className="text-slate-400">Tidak ada pertandingan live saat ini</p>
+                  </div>
                 )}
               </div>
+            </section>
 
-              {matches.length > 0 ? (
-                <div className="grid gap-4">
-                  {matches.map((match) => (
+            {/* Scheduled Matches */}
+            <section className="mb-10">
+              <div className="mb-6 flex items-center gap-2">
+                <Users className="w-6 h-6 text-amber-500" />
+                <h3 className="text-2xl font-bold text-white">Scheduled Matches</h3>
+              </div>
+              <div className="grid gap-4">
+                {matches.filter(m => m.status === 'scheduled').length > 0 ? (
+                  matches.filter(m => m.status === 'scheduled').map((match) => (
                     <MatchCard key={match.id} match={match} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 bg-slate-800/50 rounded-lg border border-slate-700">
-                  <Users className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-                  <p className="text-slate-300 mb-2">Tidak ada pertandingan saat ini</p>
-                  <p className="text-sm text-slate-400">Kembali lagi nanti untuk melihat jadwal terbaru</p>
-                </div>
-              )}
+                  ))
+                ) : (
+                  <div className="text-center py-8 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                    <p className="text-slate-400">Tidak ada pertandingan terjadwal</p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Completed Matches */}
+            <section>
+              <div className="mb-6 flex items-center gap-2">
+                <Trophy className="w-6 h-6 text-green-500" />
+                <h3 className="text-2xl font-bold text-white">Completed Matches</h3>
+              </div>
+              <div className="grid gap-4">
+                {matches.filter(m => m.status === 'completed').length > 0 ? (
+                  matches.filter(m => m.status === 'completed').map((match) => (
+                    <MatchCard key={match.id} match={match} />
+                  ))
+                ) : (
+                  <div className="text-center py-8 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                    <p className="text-slate-400">Belum ada pertandingan selesai</p>
+                  </div>
+                )}
+              </div>
             </section>
           </div>
 
