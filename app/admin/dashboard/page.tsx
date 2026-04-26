@@ -184,22 +184,22 @@ export default function AdminDashboardPage() {
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Activity className="w-6 h-6 text-primary" />
-            <span className="font-bold">Padel LiveScore</span>
+            <Activity className="w-6 h-6 text-primary shrink-0" />
+            <span className="font-bold hidden sm:inline">Padel LiveScore</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-primary">Matches</span>
-            <Link href="/admin/tournaments" className="text-sm font-medium hover:text-primary transition-colors">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="text-xs sm:text-sm font-medium text-primary">Matches</span>
+            <Link href="/admin/tournaments" className="text-xs sm:text-sm font-medium hover:text-primary transition-colors">
               Tournaments
             </Link>
             <Button
               variant="outline"
               size="sm"
               onClick={handleLogout}
-              className="gap-2 ml-4"
+              className="gap-2 ml-2 sm:ml-4 px-2 sm:px-3"
             >
-              <LogOut className="w-4 h-4" />
-              Logout
+              <LogOut className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
         </div>
@@ -257,7 +257,7 @@ export default function AdminDashboardPage() {
                     >
                       <div className="text-sm font-medium mb-1 text-balance">
                         {match.match_type === 'individual' 
-                          ? `${match.team1_player1?.name} & ${match.team1_player2?.name} vs ${match.team2_player1?.name} & ${match.team2_player2?.name}`
+                          ? `${match.team1_player1?.name} - ${match.team1_player2?.name} vs ${match.team2_player1?.name} - ${match.team2_player2?.name}`
                           : `${match.team1?.name || 'Team 1'} vs ${match.team2?.name || 'Team 2'}`
                         }
                       </div>
