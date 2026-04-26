@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, ArrowLeft, Plus, Users, Play } from 'lucide-react';
+import { Activity, ArrowLeft, Plus, Users, Play, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { useAdmin } from '@/hooks/use-admin';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -27,6 +27,19 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
   const [finishing, setFinishing] = useState(false);
   const [isGenerateRoundOpen, setIsGenerateRoundOpen] = useState(false);
   const [roundScheduledAt, setRoundScheduledAt] = useState('');
+
+  // Edit Player Modals
+  const [editingPlayer, setEditingPlayer] = useState<any>(null);
+  const [editedPlayerName, setEditedPlayerName] = useState('');
+  const [savingPlayer, setSavingPlayer] = useState(false);
+
+  // Edit Match Players Modals
+  const [editingMatch, setEditingMatch] = useState<any>(null);
+  const [matchPlayer1, setMatchPlayer1] = useState('');
+  const [matchPlayer2, setMatchPlayer2] = useState('');
+  const [matchPlayer3, setMatchPlayer3] = useState('');
+  const [matchPlayer4, setMatchPlayer4] = useState('');
+  const [savingMatchPlayers, setSavingMatchPlayers] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -119,6 +132,61 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
     }
   };
 
+  const handleEditPlayerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPlayer || !editedPlayerName.trim()) return;
+
+    setSavingPlayer(true);
+    try {
+      await fetch(`/api/admin/players/${editingPlayer.player_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editedPlayerName }),
+      });
+      setEditingPlayer(null);
+      setEditedPlayerName('');
+      await fetchData();
+      await fetchPlayers();
+    } catch (error) {
+      console.error('Failed to edit player', error);
+    } finally {
+      setSavingPlayer(false);
+    }
+  };
+
+  const openEditMatchPlayers = (match: any) => {
+    setEditingMatch(match);
+    setMatchPlayer1(match.team1_player1_id || '');
+    setMatchPlayer2(match.team1_player2_id || '');
+    setMatchPlayer3(match.team2_player1_id || '');
+    setMatchPlayer4(match.team2_player2_id || '');
+  };
+
+  const handleEditMatchPlayersSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMatch) return;
+
+    setSavingMatchPlayers(true);
+    try {
+      await fetch(`/api/admin/matches/${editingMatch.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          team1_player1_id: matchPlayer1,
+          team1_player2_id: matchPlayer2,
+          team2_player1_id: matchPlayer3,
+          team2_player2_id: matchPlayer4,
+        }),
+      });
+      setEditingMatch(null);
+      await fetchData();
+    } catch (error) {
+      console.error('Failed to edit match players', error);
+    } finally {
+      setSavingMatchPlayers(false);
+    }
+  };
+
   if (authLoading || loading) return <div className="p-8 text-center">Loading...</div>;
   if (!isAuthenticated || !data) return null;
 
@@ -135,16 +203,16 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/admin/tournaments" className="flex items-center gap-2 hover:opacity-80">
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-bold">Back</span>
+            <ArrowLeft className="w-5 h-5 shrink-0" />
+            <span className="font-bold hidden sm:inline">Back</span>
           </Link>
-          <div className="font-semibold text-lg">{tournament.name}</div>
-          <div className="w-16" /> {/* Spacer */}
+          <div className="font-semibold text-base sm:text-lg truncate px-2 text-center">{tournament.name}</div>
+          <div className="w-5 sm:w-16 shrink-0" /> {/* Spacer */}
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold capitalize mb-2">{tournament.format} Tournament</h1>
             <div className="flex gap-4 text-sm text-muted-foreground">
@@ -197,44 +265,11 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-lg">Leaderboard</CardTitle>
-                <Dialog open={isAddPlayerOpen} onOpenChange={setIsAddPlayerOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon"><Plus className="w-4 h-4" /></Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Enroll Players</DialogTitle>
-                      <DialogDescription>Select players to add to this tournament.</DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleAddPlayers} className="space-y-4 pt-4">
-                      <div className="space-y-2 max-h-60 overflow-y-auto border rounded-md p-2">
-                        {unrolledPlayers.length === 0 ? (
-                          <p className="text-sm text-muted-foreground p-2">No available players found. Add players first.</p>
-                        ) : (
-                          unrolledPlayers.map(p => (
-                            <label key={p.id} className="flex items-center gap-2 p-2 hover:bg-muted rounded cursor-pointer">
-                              <input 
-                                type="checkbox" 
-                                checked={selectedPlayers.includes(p.id)}
-                                onChange={(e) => {
-                                  if (e.target.checked) setSelectedPlayers([...selectedPlayers, p.id]);
-                                  else setSelectedPlayers(selectedPlayers.filter(id => id !== p.id));
-                                }}
-                              />
-                              {p.name}
-                            </label>
-                          ))
-                        )}
-                      </div>
-                      <Button type="submit" className="w-full" disabled={selectedPlayers.length === 0}>Add Selected Players</Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
               </CardHeader>
               <CardContent>
                 {players.length === 0 ? (
@@ -248,9 +283,22 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                           <span className="font-bold text-muted-foreground w-4">{index + 1}</span>
                           <span className="font-medium">{tp.player?.name}</span>
                         </div>
-                        <div className="text-right">
-                          <div className="font-bold text-primary">{tp.points} pts</div>
-                          <div className="text-xs text-muted-foreground">{tp.matches_played} M</div>
+                        <div className="text-right flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="font-bold text-primary">{tp.points} pts</div>
+                            <div className="text-xs text-muted-foreground">{tp.matches_played} M</div>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => {
+                              setEditingPlayer(tp);
+                              setEditedPlayerName(tp.player?.name || '');
+                            }}
+                          >
+                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -262,8 +310,11 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
 
           <div className="lg:col-span-2">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle>Matches</CardTitle>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/admin/dashboard">Pergi ke Matches</Link>
+                </Button>
               </CardHeader>
               <CardContent>
                 {matches.length === 0 ? (
@@ -279,14 +330,14 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                         </div>
                         <div className="flex-1 flex flex-col sm:flex-row items-center gap-4 w-full">
                           <div className="flex-1 text-center sm:text-right font-semibold">
-                            {match.team1_player1?.name} & {match.team1_player2?.name}
+                            {match.team1_player1?.name} - {match.team1_player2?.name}
                           </div>
                           <div className="text-muted-foreground text-xs px-2 py-1 bg-muted rounded">VS</div>
                           <div className="flex-1 text-center sm:text-left font-semibold">
-                            {match.team2_player1?.name} & {match.team2_player2?.name}
+                            {match.team2_player1?.name} - {match.team2_player2?.name}
                           </div>
                         </div>
-                        <div className="text-right min-w-[100px]">
+                        <div className="text-right min-w-[100px] flex items-center justify-end gap-2">
                           <span className={`px-2 py-1 text-xs rounded-full ${
                             match.status === 'scheduled' ? 'bg-secondary' :
                             match.status === 'live' ? 'bg-red-500/10 text-red-500' :
@@ -294,6 +345,16 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                           }`}>
                             {match.status}
                           </span>
+                          {match.status !== 'completed' && isIndividualFormat && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8"
+                              onClick={() => openEditMatchPlayers(match)}
+                            >
+                              <Pencil className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -303,6 +364,103 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             </Card>
           </div>
         </div>
+
+        {/* Edit Player Dialog */}
+        <Dialog open={!!editingPlayer} onOpenChange={(open) => !open && setEditingPlayer(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Player</DialogTitle>
+              <DialogDescription>Update the name of the player.</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditPlayerSubmit} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="playerName">Player Name</Label>
+                <Input 
+                  id="playerName" 
+                  value={editedPlayerName} 
+                  onChange={(e) => setEditedPlayerName(e.target.value)} 
+                  required 
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={savingPlayer || !editedPlayerName.trim()}>
+                {savingPlayer ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Match Players Dialog */}
+        <Dialog open={!!editingMatch} onOpenChange={(open) => !open && setEditingMatch(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Ganti Pemain Pertandingan</DialogTitle>
+              <DialogDescription>Ganti pemain untuk pertandingan ini jika ada yang berhalangan hadir.</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditMatchPlayersSubmit} className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Tim 1 - Pemain 1</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={matchPlayer1}
+                    onChange={(e) => setMatchPlayer1(e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>Pilih Pemain</option>
+                    {players.map((p: any) => (
+                      <option key={p.player.id} value={p.player.id}>{p.player.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Tim 1 - Pemain 2</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={matchPlayer2}
+                    onChange={(e) => setMatchPlayer2(e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>Pilih Pemain</option>
+                    {players.map((p: any) => (
+                      <option key={p.player.id} value={p.player.id}>{p.player.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Tim 2 - Pemain 1</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={matchPlayer3}
+                    onChange={(e) => setMatchPlayer3(e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>Pilih Pemain</option>
+                    {players.map((p: any) => (
+                      <option key={p.player.id} value={p.player.id}>{p.player.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Tim 2 - Pemain 2</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={matchPlayer4}
+                    onChange={(e) => setMatchPlayer4(e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>Pilih Pemain</option>
+                    {players.map((p: any) => (
+                      <option key={p.player.id} value={p.player.id}>{p.player.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <Button type="submit" className="w-full" disabled={savingMatchPlayers}>
+                {savingMatchPlayers ? 'Menyimpan...' : 'Simpan Perubahan'}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
