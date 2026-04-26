@@ -188,12 +188,15 @@ export default function AdminDashboardPage() {
             <span className="font-bold">Padel LiveScore</span>
           </Link>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">Referee Dashboard</span>
+            <span className="text-sm font-medium text-primary">Matches</span>
+            <Link href="/admin/tournaments" className="text-sm font-medium hover:text-primary transition-colors">
+              Tournaments
+            </Link>
             <Button
               variant="outline"
               size="sm"
               onClick={handleLogout}
-              className="gap-2"
+              className="gap-2 ml-4"
             >
               <LogOut className="w-4 h-4" />
               Logout
@@ -210,104 +213,6 @@ export default function AdminDashboardPage() {
             <p className="text-muted-foreground">
               Select a match and enter the scores
             </p>
-          </div>
-          <div className="flex gap-2">
-            <Dialog open={isCreateTeamOpen} onOpenChange={setIsCreateTeamOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Plus className="w-4 h-4" /> Add Team
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Team</DialogTitle>
-                  <DialogDescription>Add a new team to the database. Team names must be unique.</DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleCreateTeam} className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="teamName">Team Name</Label>
-                    <Input 
-                      id="teamName" 
-                      value={teamName} 
-                      onChange={(e) => setTeamName(e.target.value)} 
-                      placeholder="Enter team name" 
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="teamLogo">Logo URL (Optional)</Label>
-                    <Input 
-                      id="teamLogo" 
-                      value={teamLogo} 
-                      onChange={(e) => setTeamLogo(e.target.value)} 
-                      placeholder="https://example.com/logo.png" 
-                    />
-                  </div>
-                  {teamError && <p className="text-sm text-red-500">{teamError}</p>}
-                  <Button type="submit" className="w-full" disabled={creatingTeam || !teamName}>
-                    {creatingTeam ? 'Creating...' : 'Create Team'}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={isCreateMatchOpen} onOpenChange={setIsCreateMatchOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="w-4 h-4" /> Create Match
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Schedule New Match</DialogTitle>
-                  <DialogDescription>Create a new match between two existing teams.</DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleCreateMatch} className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label>Team 1</Label>
-                    <select 
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      value={team1Id}
-                      onChange={(e) => setTeam1Id(e.target.value)}
-                      required
-                    >
-                      <option value="">Select Team 1</option>
-                      {teams.map(t => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Team 2</Label>
-                    <select 
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      value={team2Id}
-                      onChange={(e) => setTeam2Id(e.target.value)}
-                      required
-                    >
-                      <option value="">Select Team 2</option>
-                      {teams.map(t => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="scheduledAt">Scheduled Time</Label>
-                    <Input 
-                      id="scheduledAt" 
-                      type="datetime-local" 
-                      value={scheduledAt} 
-                      onChange={(e) => setScheduledAt(e.target.value)} 
-                      required 
-                    />
-                  </div>
-                  {matchError && <p className="text-sm text-red-500">{matchError}</p>}
-                  <Button type="submit" className="w-full" disabled={creatingMatch || !team1Id || !team2Id || !scheduledAt}>
-                    {creatingMatch ? 'Scheduling...' : 'Schedule Match'}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
           </div>
         </div>
 
@@ -351,11 +256,16 @@ export default function AdminDashboardPage() {
                       }`}
                     >
                       <div className="text-sm font-medium mb-1 text-balance">
-                        {match.team1?.name || 'Team 1'} vs{' '}
-                        {match.team2?.name || 'Team 2'}
+                        {match.match_type === 'individual' 
+                          ? `${match.team1_player1?.name} & ${match.team1_player2?.name} vs ${match.team2_player1?.name} & ${match.team2_player2?.name}`
+                          : `${match.team1?.name || 'Team 1'} vs ${match.team2?.name || 'Team 2'}`
+                        }
                       </div>
-                      <div className="text-xs opacity-75">
-                        {new Date(match.scheduled_at).toLocaleString('id-ID')}
+                      <div className="text-xs flex justify-between items-center mt-2 opacity-80">
+                        <span>{new Date(match.scheduled_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${match.status === 'live' ? 'bg-red-500 text-white' : match.status === 'completed' ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'}`}>
+                          {match.status}
+                        </span>
                       </div>
                     </button>
                   ))}

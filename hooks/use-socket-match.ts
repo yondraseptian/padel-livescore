@@ -8,6 +8,11 @@ export interface MatchScore {
     team2Games: number;
     isTiebreaker?: boolean;
   };
+  allSets: {
+    team1Games: number;
+    team2Games: number;
+  }[];
+  isPointScoring: boolean;
   matchComplete: boolean;
   winner?: 'team1' | 'team2';
   currentGame?: {
@@ -35,6 +40,8 @@ export function useSocketMatch(matchId: string) {
             team2Games: data.matchState.currentSet.team2Games,
             isTiebreaker: data.matchState.currentSet.isTiebreaker,
           },
+          allSets: data.matchState.allSets || [],
+          isPointScoring: data.matchState.isPointScoring || false,
           matchComplete: data.matchState.matchComplete,
           winner: data.matchState.winner,
           currentGame: {

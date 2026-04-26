@@ -31,7 +31,9 @@ export function MatchCard({ match }: MatchCardProps) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('id-ID', {
+    return date.toLocaleString('id-ID', {
+      day: 'numeric',
+      month: 'short',
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -65,30 +67,61 @@ export function MatchCard({ match }: MatchCardProps) {
           {/* Team 1 */}
           <div className="text-center flex flex-col items-center">
             <Avatar className="w-12 h-12 mb-2 rounded-lg">
-              <AvatarImage src={match.team1?.logo_url || ''} alt={match.team1?.name} className="object-cover" />
+              <AvatarImage 
+                src={match.match_type === 'individual' ? (match.team1_player1?.avatar_url || '') : (match.team1?.logo_url || '')} 
+                alt={match.match_type === 'individual' ? `${match.team1_player1?.name} & ${match.team1_player2?.name}` : match.team1?.name} 
+                className="object-cover" 
+              />
               <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-lg">
-                {getTeamInitials(match.team1?.name || '')}
+                {getTeamInitials(match.match_type === 'individual' 
+                  ? `${match.team1_player1?.name?.charAt(0) || ''}${match.team1_player2?.name?.charAt(0) || ''}`
+                  : (match.team1?.name || '')
+                )}
               </AvatarFallback>
             </Avatar>
             <p className="font-semibold text-sm text-balance">
-              {match.team1?.name}
+              {match.match_type === 'individual' 
+                ? <span className="flex flex-col"><span>{match.team1_player1?.name}</span><span>& {match.team1_player2?.name}</span></span>
+                : match.team1?.name}
             </p>
             {!loading && score && (
               <p className="text-2xl font-bold mt-2">
-                {getTennisScoreDisplay(score.currentGame?.team1Points || 0, score.currentGame?.team2Points || 0, score.currentSet.isTiebreaker)}
+                {score.isPointScoring 
+                  ? (score.allSets?.[0]?.team1Games || score.currentGame?.team1Points || 0)
+                  : (score.matchComplete ? '' : getTennisScoreDisplay(score.currentGame?.team1Points || 0, score.currentGame?.team2Points || 0, score.currentSet.isTiebreaker))
+                }
               </p>
             )}
           </div>
 
           {/* Score/Status */}
-          <div className="text-center border-l border-r border-border py-4">
+          <div className="text-center border-l border-r border-border py-4 px-2">
             {!loading && score ? (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Sets</p>
-                <p className="text-xl font-bold">
-                  {score.currentSet.team1Games}-{score.currentSet.team2Games}
-                </p>
-              </div>
+              score.isPointScoring ? (
+                 <div>
+                   <p className="text-sm text-muted-foreground mb-1">Points</p>
+                   <p className="text-xl font-bold">VS</p>
+                 </div>
+              ) : (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Sets</p>
+                  <div className="flex gap-2 justify-center">
+                    {score.allSets && score.allSets.length > 0 ? (
+                      score.allSets.map((s, i) => (
+                        <div key={i} className={`flex flex-col items-center ${i === score.allSets!.length - 1 && !score.matchComplete ? 'text-blue-500' : ''}`}>
+                          <p className="text-lg font-bold">
+                            {s.team1Games}-{s.team2Games}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-lg font-bold">
+                        {score.currentSet.team1Games}-{score.currentSet.team2Games}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )
             ) : (
               <p className="text-sm text-muted-foreground">-</p>
             )}
@@ -97,17 +130,29 @@ export function MatchCard({ match }: MatchCardProps) {
           {/* Team 2 */}
           <div className="text-center flex flex-col items-center">
             <Avatar className="w-12 h-12 mb-2 rounded-lg">
-              <AvatarImage src={match.team2?.logo_url || ''} alt={match.team2?.name} className="object-cover" />
+              <AvatarImage 
+                src={match.match_type === 'individual' ? (match.team2_player1?.avatar_url || '') : (match.team2?.logo_url || '')} 
+                alt={match.match_type === 'individual' ? `${match.team2_player1?.name} & ${match.team2_player2?.name}` : match.team2?.name} 
+                className="object-cover" 
+              />
               <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-lg">
-                {getTeamInitials(match.team2?.name || '')}
+                {getTeamInitials(match.match_type === 'individual' 
+                  ? `${match.team2_player1?.name?.charAt(0) || ''}${match.team2_player2?.name?.charAt(0) || ''}`
+                  : (match.team2?.name || '')
+                )}
               </AvatarFallback>
             </Avatar>
             <p className="font-semibold text-sm text-balance">
-              {match.team2?.name}
+              {match.match_type === 'individual' 
+                ? <span className="flex flex-col"><span>{match.team2_player1?.name}</span><span>& {match.team2_player2?.name}</span></span>
+                : match.team2?.name}
             </p>
             {!loading && score && (
               <p className="text-2xl font-bold mt-2">
-                {getTennisScoreDisplay(score.currentGame?.team2Points || 0, score.currentGame?.team1Points || 0, score.currentSet.isTiebreaker)}
+                {score.isPointScoring 
+                  ? (score.allSets?.[0]?.team2Games || score.currentGame?.team2Points || 0)
+                  : (score.matchComplete ? '' : getTennisScoreDisplay(score.currentGame?.team2Points || 0, score.currentGame?.team1Points || 0, score.currentSet.isTiebreaker))
+                }
               </p>
             )}
           </div>
