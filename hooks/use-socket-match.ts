@@ -6,9 +6,14 @@ export interface MatchScore {
   currentSet: {
     team1Games: number;
     team2Games: number;
+    isTiebreaker?: boolean;
   };
   matchComplete: boolean;
   winner?: 'team1' | 'team2';
+  currentGame?: {
+    team1Points: number;
+    team2Points: number;
+  };
 }
 
 export function useSocketMatch(matchId: string) {
@@ -28,9 +33,14 @@ export function useSocketMatch(matchId: string) {
           currentSet: {
             team1Games: data.matchState.currentSet.team1Games,
             team2Games: data.matchState.currentSet.team2Games,
+            isTiebreaker: data.matchState.currentSet.isTiebreaker,
           },
           matchComplete: data.matchState.matchComplete,
           winner: data.matchState.winner,
+          currentGame: {
+            team1Points: data.matchState.currentGame?.team1Points || 0,
+            team2Points: data.matchState.currentGame?.team2Points || 0,
+          }
         });
       }
       setError(null);
