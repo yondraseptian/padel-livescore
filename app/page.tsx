@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { MatchCard } from '@/components/match-card';
 import { Standings } from '@/components/standings';
 import { getUpcomingMatches } from '@/lib/match-service';
-import { Activity } from 'lucide-react';
+import { Activity, Trophy, Users } from 'lucide-react';
+import { Header } from '@/components/header';
 
 export const revalidate = 60; // Revalidate every 60 seconds
 
@@ -27,77 +28,167 @@ export default async function Home() {
   const matches = await getMatchesData();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Activity className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl font-bold">Padel LiveScore</h1>
-          </div>
-          <nav className="flex gap-4">
-            <Link href="/admin/login">
-              <Button variant="outline" size="sm">
-                Admin Panel
-              </Button>
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-12">
-        {/* Hero Section */}
-        <section className="mb-16">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold mb-4 text-balance">
-              Live Padel Match Scores
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Watch real-time updates from ongoing matches and check the latest standings
-            </p>
-          </div>
-        </section>
-
-        {/* Live Matches Section */}
-        <section className="mb-16">
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold">Upcoming & Live Matches</h3>
-            <p className="text-muted-foreground mt-2">
-              {matches.length > 0
-                ? `${matches.length} match${matches.length !== 1 ? 'es' : ''} scheduled`
-                : 'No matches scheduled'}
-            </p>
-          </div>
-
-          {matches.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2">
-              {matches.map((match) => (
-                <MatchCard key={match.id} match={match} />
-              ))}
+      <main className="max-w-7xl mx-auto px-4 py-12">
+        {/* Hero Banner */}
+        <section className="mb-16 relative overflow-hidden">
+          <div className="relative bg-gradient-to-r from-amber-600 to-orange-600 rounded-2xl overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.1)_0%,transparent_50%)]"></div>
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">No matches available at the moment</p>
-              <p className="text-sm text-muted-foreground">Check back soon!</p>
+
+            {/* Content */}
+            <div className="relative p-12 md:p-16 text-center text-white">
+              <div className="mb-4 inline-flex items-center gap-2 bg-black/20 px-4 py-2 rounded-full">
+                <Trophy className="w-5 h-5" />
+                <span className="text-sm font-semibold">Turnamen Padel 2024</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-balance">
+                Saksikan Pertandingan Terbaik
+              </h2>
+              <p className="text-lg md:text-xl text-white/90 mb-6 text-balance">
+                Ikuti live score, statistik, dan peringkat pemain terbaik dalam waktu nyata
+              </p>
+              <Button size="lg" className="bg-white text-amber-600 hover:bg-slate-100 font-semibold">
+                Lihat Jadwal Lengkap
+              </Button>
             </div>
-          )}
+          </div>
         </section>
 
-        {/* Standings Section */}
-        <section className="mb-16">
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold">Tournament Standings</h3>
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+          {/* Left Column - Matches (2 columns on large screens) */}
+          <div className="lg:col-span-2">
+            {/* Upcoming & Live Matches Section */}
+            <section>
+              <div className="mb-8 flex items-center gap-2">
+                <Activity className="w-6 h-6 text-amber-500" />
+                <h3 className="text-2xl font-bold text-white">Live & Upcoming</h3>
+                {matches.some(m => m.status === 'live') && (
+                  <span className="ml-auto inline-flex items-center gap-1 text-red-500 text-sm font-semibold">
+                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    LIVE NOW
+                  </span>
+                )}
+              </div>
+
+              {matches.length > 0 ? (
+                <div className="grid gap-4">
+                  {matches.map((match) => (
+                    <MatchCard key={match.id} match={match} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <Users className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                  <p className="text-slate-300 mb-2">Tidak ada pertandingan saat ini</p>
+                  <p className="text-sm text-slate-400">Kembali lagi nanti untuk melihat jadwal terbaru</p>
+                </div>
+              )}
+            </section>
           </div>
-          <Standings />
-        </section>
+
+          {/* Right Column - Sponsor & Info */}
+          <div className="space-y-8">
+            {/* Sponsor Section */}
+            <section className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-amber-500" />
+                Sponsor Resmi
+              </h3>
+
+              {/* Gold Sponsors */}
+              <div className="mb-8">
+                <p className="text-xs font-semibold text-slate-400 uppercase mb-4">Sponsor Platinum</p>
+                <div className="space-y-3">
+                  {[1, 2].map((sponsor) => (
+                    <div
+                      key={sponsor}
+                      className="bg-gradient-to-r from-amber-900/20 to-orange-900/20 border border-amber-700/30 rounded-lg p-4 flex items-center justify-center min-h-24"
+                    >
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-amber-600/20 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                          <span className="text-2xl font-bold text-amber-400">S{sponsor}</span>
+                        </div>
+                        <p className="text-xs text-slate-400">Sponsor Logo</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Silver Sponsors */}
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase mb-4">Sponsor Gold</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {[1, 2, 3, 4].map((sponsor) => (
+                    <div
+                      key={sponsor}
+                      className="bg-slate-700/50 border border-slate-600 rounded-lg p-3 flex items-center justify-center aspect-square"
+                    >
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-slate-300">S{sponsor}</div>
+                        <p className="text-xs text-slate-500 mt-1">Logo</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Quick Stats */}
+            <section className="grid grid-cols-2 gap-4">
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold text-amber-500 mb-1">
+                  {matches.length}
+                </div>
+                <p className="text-sm text-slate-400">Pertandingan</p>
+              </div>
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold text-green-500 mb-1">
+                  {matches.filter(m => m.status === 'live').length}
+                </div>
+                <p className="text-sm text-slate-400">Live Sekarang</p>
+              </div>
+            </section>
+
+            {/* Tournament Info */}
+            <section className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+              <h3 className="text-lg font-bold text-white mb-4">Informasi</h3>
+              <ul className="space-y-3 text-sm text-slate-300">
+                <li className="flex gap-2">
+                  <span className="text-amber-500 font-bold">•</span>
+                  <span>Turnamen terbuka untuk semua level</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-amber-500 font-bold">•</span>
+                  <span>Update skor real-time</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-amber-500 font-bold">•</span>
+                  <span>Pantau statistik pemain</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-amber-500 font-bold">•</span>
+                  <span>Lihat peringkat global</span>
+                </li>
+              </ul>
+            </section>
+          </div>
+        </div>
 
         {/* Footer Info */}
-        <section className="border-t border-border pt-12 text-center text-muted-foreground">
-          <p className="mb-4">Padel LiveScore - Real-time tournament updates and standings</p>
+        <section className="border-t border-slate-700 pt-12 text-center text-slate-400">
+          <p className="mb-4 text-white font-semibold">Padel LiveScore - Platform Skor Turnamen Padel Real-time</p>
           <p className="text-sm">
-            Last updated:{' '}
-            <span className="font-mono">
+            Terakhir diperbarui:{' '}
+            <span className="font-mono text-slate-300">
               {new Date().toLocaleTimeString('id-ID')}
             </span>
           </p>

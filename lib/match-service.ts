@@ -14,6 +14,7 @@ export interface SetScore {
   team2Games: number;
   isComplete: boolean;
   winner?: 'team1' | 'team2';
+  isTiebreaker?: boolean;
 }
 
 export interface MatchGameState {
@@ -23,6 +24,25 @@ export interface MatchGameState {
   allSets: SetScore[];
   matchComplete: boolean;
   winner?: 'team1' | 'team2';
+  currentGame: {
+    team1Points: number;
+    team2Points: number;
+  };
+}
+
+export function getTennisScoreDisplay(teamPoints: number, oppPoints: number, isTiebreaker: boolean = false): string {
+  if (isTiebreaker) {
+    return teamPoints.toString();
+  }
+  
+  if (teamPoints >= 3 && oppPoints >= 3) {
+    if (teamPoints === oppPoints) return '40'; // Deuce
+    if (teamPoints > oppPoints) return 'AD';
+    return '40'; // Opponent has AD
+  }
+
+  const scoreMap = ['0', '15', '30', '40'];
+  return scoreMap[teamPoints] || '40';
 }
 
 // Get all match scores for a match
@@ -42,113 +62,118 @@ export async function getMatchScores(matchId: string): Promise<MatchScore[]> {
   return data || [];
 }
 
+// Helper to determine if a set is a tiebreaker
+function isSetTiebreaker(team1Games: number, team2Games: number): boolean {
+  return team1Games === 6 && team2Games === 6;
+}
+
+// Helper to determine if a game is won
+function isGameWon(team1Points: number, team2Points: number, isTiebreaker: boolean): 'team1' | 'team2' | null {
+  if (isTiebreaker) {
+    if (team1Points >= 7 && team1Points - team2Points >= 2) return 'team1';
+    if (team2Points >= 7 && team2Points - team1Points >= 2) return 'team2';
+  } else {
+    if (team1Points >= 4 && team1Points - team2Points >= 2) return 'team1';
+    if (team2Points >= 4 && team2Points - team1Points >= 2) return 'team2';
+  }
+  return null;
+}
+
 // Calculate current match state from all scores
 export function calculateMatchState(scores: MatchScore[]): MatchGameState {
-  const setScores: Record<number, { team1: number; team2: number }> = {};
-  const completedSets: SetScore[] = [];
+  // Sort scores sequentially
+  const sortedScores = [...scores].sort((a, b) => {
+    if (a.set_number !== b.set_number) return a.set_number - b.set_number;
+    return a.game_number - b.game_number;
+  });
+
+  const sets: Record<number, SetScore> = {
+    1: { team1Games: 0, team2Games: 0, isComplete: false },
+    2: { team1Games: 0, team2Games: 0, isComplete: false },
+    3: { team1Games: 0, team2Games: 0, isComplete: false },
+  };
+
   let team1SetsWon = 0;
   let team2SetsWon = 0;
 
-  // Group scores by set
-  for (const score of scores) {
-    if (!setScores[score.set_number]) {
-      setScores[score.set_number] = { team1: 0, team2: 0 };
-    }
+  let currentGameTeam1Points = 0;
+  let currentGameTeam2Points = 0;
 
-    if (score.team1_points > setScores[score.set_number].team1) {
-      setScores[score.set_number].team1 = score.team1_points;
-    }
-    if (score.team2_points > setScores[score.set_number].team2) {
-      setScores[score.set_number].team2 = score.team2_points;
+  for (const score of sortedScores) {
+    const set = sets[score.set_number];
+    if (!set || set.isComplete) continue;
+    
+    // Check if this game is a tiebreaker
+    const isTiebreaker = isSetTiebreaker(set.team1Games, set.team2Games);
+    set.isTiebreaker = isTiebreaker;
+
+    const gameWinner = isGameWon(score.team1_points, score.team2_points, isTiebreaker);
+    
+    if (gameWinner) {
+      if (gameWinner === 'team1') set.team1Games++;
+      if (gameWinner === 'team2') set.team2Games++;
+
+      // Check if set is won
+      if (isTiebreaker) {
+        set.isComplete = true;
+        set.winner = gameWinner;
+      } else {
+        if (set.team1Games >= 6 && set.team1Games - set.team2Games >= 2) {
+          set.isComplete = true;
+          set.winner = 'team1';
+        } else if (set.team2Games >= 6 && set.team2Games - set.team1Games >= 2) {
+          set.isComplete = true;
+          set.winner = 'team2';
+        } else if (set.team1Games === 7) {
+          set.isComplete = true;
+          set.winner = 'team1';
+        } else if (set.team2Games === 7) {
+          set.isComplete = true;
+          set.winner = 'team2';
+        }
+      }
+
+      if (set.isComplete) {
+        if (set.winner === 'team1') team1SetsWon++;
+        if (set.winner === 'team2') team2SetsWon++;
+      }
+
+      // Reset points for next game
+      currentGameTeam1Points = 0;
+      currentGameTeam2Points = 0;
+    } else {
+      // Game ongoing
+      currentGameTeam1Points = score.team1_points;
+      currentGameTeam2Points = score.team2_points;
     }
   }
 
-  // Determine set results
-  for (const setNum of Object.keys(setScores).sort((a, b) => parseInt(a) - parseInt(b))) {
-    const setNumber = parseInt(setNum);
-    const { team1, team2 } = setScores[setNumber];
-
-    // Check if set is complete
-    let isComplete = false;
-    let winner: 'team1' | 'team2' | undefined;
-
-    if (team1 >= 6 && team1 - team2 >= 2) {
-      isComplete = true;
-      winner = 'team1';
-      team1SetsWon++;
-    } else if (team2 >= 6 && team2 - team1 >= 2) {
-      isComplete = true;
-      winner = 'team2';
-      team2SetsWon++;
-    } else if (team1 === 7 && team1 - team2 >= 2) {
-      // Tiebreaker
-      isComplete = true;
-      winner = 'team1';
-      team1SetsWon++;
-    } else if (team2 === 7 && team2 - team1 >= 2) {
-      // Tiebreaker
-      isComplete = true;
-      winner = 'team2';
-      team2SetsWon++;
-    }
-
-    if (setNumber < 3) {
-      completedSets.push({
-        team1Games: team1,
-        team2Games: team2,
-        isComplete,
-        winner,
-      });
-    }
+  // Find active set
+  let activeSetNum = 1;
+  if (sets[1].isComplete) activeSetNum = 2;
+  if (sets[2].isComplete && team1SetsWon < 2 && team2SetsWon < 2) activeSetNum = 3;
+  if (team1SetsWon >= 2 || team2SetsWon >= 2) {
+    if (sets[3].isComplete) activeSetNum = 3;
+    else if (sets[2].isComplete) activeSetNum = 2;
+    else activeSetNum = 1;
   }
 
-  // Current set is the last one
-  const currentSetNum = Math.max(...Object.keys(setScores).map(Number), 1);
-  const { team1: currentTeam1, team2: currentTeam2 } = setScores[currentSetNum] || { team1: 0, team2: 0 };
+  const matchComplete = team1SetsWon === 2 || team2SetsWon === 2;
+  const matchWinner = team1SetsWon === 2 ? 'team1' : team2SetsWon === 2 ? 'team2' : undefined;
 
-  let currentSetComplete = false;
-  let currentSetWinner: 'team1' | 'team2' | undefined;
-
-  if (currentTeam1 >= 6 && currentTeam1 - currentTeam2 >= 2) {
-    currentSetComplete = true;
-    currentSetWinner = 'team1';
-  } else if (currentTeam2 >= 6 && currentTeam2 - currentTeam1 >= 2) {
-    currentSetComplete = true;
-    currentSetWinner = 'team2';
-  } else if (currentTeam1 === 7 && currentTeam1 - currentTeam2 >= 2) {
-    currentSetComplete = true;
-    currentSetWinner = 'team1';
-  } else if (currentTeam2 === 7 && currentTeam2 - currentTeam1 >= 2) {
-    currentSetComplete = true;
-    currentSetWinner = 'team2';
-  }
-
-  const currentSet: SetScore = {
-    team1Games: currentTeam1,
-    team2Games: currentTeam2,
-    isComplete: currentSetComplete,
-    winner: currentSetWinner,
-  };
-
-  // Determine match winner
-  let matchComplete = false;
-  let matchWinner: 'team1' | 'team2' | undefined;
-
-  if (team1SetsWon === 2) {
-    matchComplete = true;
-    matchWinner = 'team1';
-  } else if (team2SetsWon === 2) {
-    matchComplete = true;
-    matchWinner = 'team2';
-  }
+  sets[activeSetNum].isTiebreaker = isSetTiebreaker(sets[activeSetNum].team1Games, sets[activeSetNum].team2Games);
 
   return {
     team1Sets: team1SetsWon,
     team2Sets: team2SetsWon,
-    currentSet,
-    allSets: completedSets,
+    currentSet: sets[activeSetNum],
+    allSets: [sets[1], sets[2], sets[3]].filter(s => s.team1Games > 0 || s.team2Games > 0 || s === sets[activeSetNum]),
     matchComplete,
     winner: matchWinner,
+    currentGame: {
+      team1Points: matchComplete ? 0 : currentGameTeam1Points,
+      team2Points: matchComplete ? 0 : currentGameTeam2Points
+    }
   };
 }
 

@@ -2,8 +2,25 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSocketMatch } from '@/hooks/use-socket-match';
+import { getTeamInitials } from '@/lib/utils';
 import type { Match } from '@/lib/db';
+
+function getTennisScoreDisplay(teamPoints: number, oppPoints: number, isTiebreaker: boolean = false): string {
+  if (isTiebreaker) {
+    return teamPoints.toString();
+  }
+  
+  if (teamPoints >= 3 && oppPoints >= 3) {
+    if (teamPoints === oppPoints) return '40'; // Deuce
+    if (teamPoints > oppPoints) return 'AD';
+    return '40'; // Opponent has AD
+  }
+
+  const scoreMap = ['0', '15', '30', '40'];
+  return scoreMap[teamPoints] || '40';
+}
 
 interface MatchCardProps {
   match: Match;
@@ -46,20 +63,19 @@ export function MatchCard({ match }: MatchCardProps) {
         {/* Match Score Display */}
         <div className="grid grid-cols-3 gap-4 items-center">
           {/* Team 1 */}
-          <div className="text-center">
-            {match.team1?.logo_url && (
-              <img
-                src={match.team1.logo_url}
-                alt={match.team1?.name}
-                className="w-12 h-12 mx-auto rounded-lg mb-2 object-cover"
-              />
-            )}
+          <div className="text-center flex flex-col items-center">
+            <Avatar className="w-12 h-12 mb-2 rounded-lg">
+              <AvatarImage src={match.team1?.logo_url || ''} alt={match.team1?.name} className="object-cover" />
+              <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-lg">
+                {getTeamInitials(match.team1?.name || '')}
+              </AvatarFallback>
+            </Avatar>
             <p className="font-semibold text-sm text-balance">
               {match.team1?.name}
             </p>
             {!loading && score && (
               <p className="text-2xl font-bold mt-2">
-                {score.team1Sets}
+                {getTennisScoreDisplay(score.currentGame?.team1Points || 0, score.currentGame?.team2Points || 0, score.currentSet.isTiebreaker)}
               </p>
             )}
           </div>
@@ -68,7 +84,7 @@ export function MatchCard({ match }: MatchCardProps) {
           <div className="text-center border-l border-r border-border py-4">
             {!loading && score ? (
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Set {score.team1Sets + score.team2Sets + 1}</p>
+                <p className="text-sm text-muted-foreground mb-1">Sets</p>
                 <p className="text-xl font-bold">
                   {score.currentSet.team1Games}-{score.currentSet.team2Games}
                 </p>
@@ -79,20 +95,19 @@ export function MatchCard({ match }: MatchCardProps) {
           </div>
 
           {/* Team 2 */}
-          <div className="text-center">
-            {match.team2?.logo_url && (
-              <img
-                src={match.team2.logo_url}
-                alt={match.team2?.name}
-                className="w-12 h-12 mx-auto rounded-lg mb-2 object-cover"
-              />
-            )}
+          <div className="text-center flex flex-col items-center">
+            <Avatar className="w-12 h-12 mb-2 rounded-lg">
+              <AvatarImage src={match.team2?.logo_url || ''} alt={match.team2?.name} className="object-cover" />
+              <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-lg">
+                {getTeamInitials(match.team2?.name || '')}
+              </AvatarFallback>
+            </Avatar>
             <p className="font-semibold text-sm text-balance">
               {match.team2?.name}
             </p>
             {!loading && score && (
               <p className="text-2xl font-bold mt-2">
-                {score.team2Sets}
+                {getTennisScoreDisplay(score.currentGame?.team2Points || 0, score.currentGame?.team1Points || 0, score.currentSet.isTiebreaker)}
               </p>
             )}
           </div>
