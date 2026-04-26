@@ -183,17 +183,6 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Standings Section */}
-        <section className="mb-16">
-          <div className="mb-8 flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-amber-500" />
-            <h3 className="text-2xl font-bold text-white">Peringkat Turnamen</h3>
-          </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-            <Standings />
-          </div>
-        </section>
-
         {/* Footer Info */}
         <section className="border-t border-slate-700 pt-12 text-center text-slate-400">
           <p className="mb-4 text-white font-semibold">Padel LiveScore - Platform Skor Turnamen Padel Real-time</p>
