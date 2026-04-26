@@ -2,7 +2,9 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSocketMatch } from '@/hooks/use-socket-match';
+import { getTeamInitials } from '@/lib/utils';
 import type { Match } from '@/lib/db';
 
 function getTennisScoreDisplay(teamPoints: number, oppPoints: number, isTiebreaker: boolean = false): string {
@@ -61,14 +63,13 @@ export function MatchCard({ match }: MatchCardProps) {
         {/* Match Score Display */}
         <div className="grid grid-cols-3 gap-4 items-center">
           {/* Team 1 */}
-          <div className="text-center">
-            {match.team1?.logo_url && (
-              <img
-                src={match.team1.logo_url}
-                alt={match.team1?.name}
-                className="w-12 h-12 mx-auto rounded-lg mb-2 object-cover"
-              />
-            )}
+          <div className="text-center flex flex-col items-center">
+            <Avatar className="w-12 h-12 mb-2 rounded-lg">
+              <AvatarImage src={match.team1?.logo_url || ''} alt={match.team1?.name} className="object-cover" />
+              <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-lg">
+                {getTeamInitials(match.team1?.name || '')}
+              </AvatarFallback>
+            </Avatar>
             <p className="font-semibold text-sm text-balance">
               {match.team1?.name}
             </p>
@@ -94,14 +95,13 @@ export function MatchCard({ match }: MatchCardProps) {
           </div>
 
           {/* Team 2 */}
-          <div className="text-center">
-            {match.team2?.logo_url && (
-              <img
-                src={match.team2.logo_url}
-                alt={match.team2?.name}
-                className="w-12 h-12 mx-auto rounded-lg mb-2 object-cover"
-              />
-            )}
+          <div className="text-center flex flex-col items-center">
+            <Avatar className="w-12 h-12 mb-2 rounded-lg">
+              <AvatarImage src={match.team2?.logo_url || ''} alt={match.team2?.name} className="object-cover" />
+              <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-lg">
+                {getTeamInitials(match.team2?.name || '')}
+              </AvatarFallback>
+            </Avatar>
             <p className="font-semibold text-sm text-balance">
               {match.team2?.name}
             </p>
