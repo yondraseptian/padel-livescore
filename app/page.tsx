@@ -46,7 +46,7 @@ export default async function Home() {
             <div className="relative p-12 md:p-16 text-center text-white">
               <div className="mb-4 inline-flex items-center gap-2 bg-black/20 px-4 py-2 rounded-full">
                 <Trophy className="w-5 h-5" />
-                <span className="text-sm font-semibold">Turnamen Padel 2024</span>
+                <span className="text-sm font-semibold">Turnamen Padel 2026</span>
               </div>
               <h2 className="text-4xl md:text-5xl font-bold mb-4 text-balance">
                 Saksikan Pertandingan Terbaik
