@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Standings } from '@/components/standings';
 import { TournamentStandings } from '@/components/tournament-standings';
-import { Trophy, Medal, Target } from 'lucide-react';
+import { Trophy, Medal, Target, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const categoryData = [
   {
@@ -38,6 +39,25 @@ const categoryData = [
 ];
 
 export default function KlasemenPage() {
+  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTournaments = async () => {
+      try {
+        const res = await fetch('/api/tournaments/active');
+        const data = await res.json();
+        setTournaments(data || []);
+      } catch (error) {
+        console.error('Error fetching tournaments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTournaments();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <Header />
@@ -85,17 +105,30 @@ export default function KlasemenPage() {
         </div> */}
 
         {/* Standings Section */}
-        <section className="mb-16">
-          <div className="mb-8 flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-amber-500" />
-            <h3 className="text-2xl font-bold text-white">Peringkat Turnamen</h3>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <Loader2 className="w-8 h-8 animate-spin mb-4 text-amber-500" />
+            <p>Memuat klasemen...</p>
           </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-            <Standings />
+        ) : tournaments.length > 0 ? (
+          <section className="mb-16">
+            <div className="mb-8 flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-amber-500" />
+              <h3 className="text-2xl font-bold text-white">Peringkat Turnamen</h3>
+            </div>
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 mb-8">
+              <Standings />
+            </div>
+            
+            <TournamentStandings />
+          </section>
+        ) : (
+          <div className="text-center py-20 bg-slate-900/50 border border-slate-800 rounded-xl mb-16">
+            <Trophy className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Tidak Ada Turnamen Aktif</h3>
+            <p className="text-slate-400">Saat ini tidak ada turnamen yang sedang berlangsung.</p>
           </div>
-          
-          <TournamentStandings />
-        </section>
+        )}
 
         {/* Info Section */}
         <div className="mt-12 bg-slate-900 border border-slate-700 rounded-lg p-6">

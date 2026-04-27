@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { Activity, Menu } from "lucide-react";
 import { useState } from "react";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const navLinks = [
   { href: "/", label: "Jadwal" },
   { href: "/classement", label: "Klasemen" },
   { href: "/roles", label: "Aturan" },
+  { href: "/admin/dashboard", label: "Host" },
 ];
 
 export function Header() {
