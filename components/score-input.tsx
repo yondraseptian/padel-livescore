@@ -184,7 +184,11 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
       <CardHeader>
         <CardTitle>
           {match.match_type === 'individual' ? (
-            `${match.team1_player1?.name} - ${match.team1_player2?.name} vs ${match.team2_player1?.name} - ${match.team2_player2?.name}`
+            <>
+              {match.team1_player1?.name}{match.team1_player2?.name ? ` & ${match.team1_player2.name}` : ''}
+              <span className="mx-2 text-muted-foreground font-normal">vs</span>
+              {match.team2_player1?.name}{match.team2_player2?.name ? ` & ${match.team2_player2.name}` : ''}
+            </>
           ) : (
             `${match.team1?.name} vs ${match.team2?.name}`
           )}
@@ -217,14 +221,18 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
               <p className="text-sm text-muted-foreground mb-2">Sets Won</p>
               <p className="text-3xl font-bold">{matchState.currentSet.team1Games}</p>
               <p className="text-sm text-muted-foreground">
-                {match.match_type === 'individual' ? `${match.team1_player1?.name} - ${match.team1_player2?.name}` : match.team1?.name}
+                {match.match_type === 'individual' 
+                  ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` & ${match.team1_player2.name}` : ''}` 
+                  : match.team1?.name}
               </p>
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-2">Sets Won</p>
               <p className="text-3xl font-bold">{matchState.currentSet.team2Games}</p>
               <p className="text-sm text-muted-foreground">
-                {match.match_type === 'individual' ? `${match.team2_player1?.name} - ${match.team2_player2?.name}` : match.team2?.name}
+                {match.match_type === 'individual' 
+                  ? `${match.team2_player1?.name}${match.team2_player2?.name ? ` & ${match.team2_player2.name}` : ''}` 
+                  : match.team2?.name}
               </p>
             </div>
           </div>
@@ -236,7 +244,9 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-2">
-                {match.match_type === 'individual' ? `${match.team1_player1?.name} - ${match.team1_player2?.name}` : match.team1?.name}
+                {match.match_type === 'individual' 
+                  ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` & ${match.team1_player2.name}` : ''}` 
+                  : match.team1?.name}
               </p>
               <p className="text-5xl font-bold mb-4 text-blue-600">
                 {matchState.isPointScoring ? matchState.currentGame.team1Points : getTennisScoreDisplay(matchState.currentGame.team1Points, matchState.currentGame.team2Points, matchState.currentSet.isTiebreaker)}
@@ -245,7 +255,9 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-2">
-                {match.match_type === 'individual' ? `${match.team2_player1?.name} - ${match.team2_player2?.name}` : match.team2?.name}
+                {match.match_type === 'individual' 
+                  ? `${match.team2_player1?.name}${match.team2_player2?.name ? ` & ${match.team2_player2.name}` : ''}` 
+                  : match.team2?.name}
               </p>
               <p className="text-5xl font-bold mb-4 text-blue-600">
                 {matchState.isPointScoring ? matchState.currentGame.team2Points : getTennisScoreDisplay(matchState.currentGame.team2Points, matchState.currentGame.team1Points, matchState.currentSet.isTiebreaker)}
@@ -326,8 +338,12 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
                 ) : (
                   <>
                     {matchState.team1Sets > matchState.team2Sets || matchState.winner === 'team1'
-                      ? (match.match_type === 'individual' ? `${match.team1_player1?.name} - ${match.team1_player2?.name}` : match.team1?.name)
-                      : (match.match_type === 'individual' ? `${match.team2_player1?.name} - ${match.team2_player2?.name}` : match.team2?.name)}{' '}
+                      ? (match.match_type === 'individual' 
+                          ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` & ${match.team1_player2.name}` : ''}` 
+                          : match.team1?.name)
+                      : (match.match_type === 'individual' 
+                          ? `${match.team2_player1?.name}${match.team2_player2?.name ? ` & ${match.team2_player2.name}` : ''}` 
+                          : match.team2?.name)}{' '}
                     wins {!matchState.isPointScoring ? `${matchState.team1Sets}-${matchState.team2Sets}` : `${Math.max(matchState.currentGame.team1Points, matchState.currentGame.team2Points)} - ${Math.min(matchState.currentGame.team1Points, matchState.currentGame.team2Points)}`}
                   </>
                 )}

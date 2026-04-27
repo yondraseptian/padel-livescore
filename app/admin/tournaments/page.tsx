@@ -31,6 +31,11 @@ export default function AdminTournamentsPage() {
   const [pointPerMatch, setPointPerMatch] = useState('32');
   const [normalScoringRule, setNormalScoringRule] = useState('first_to_4');
   const [players, setPlayers] = useState<string[]>(['', '', '', '']); // Start with 4 empty player slots
+  const [knockoutSetting, setKnockoutSetting] = useState('8'); // default 8 teams
+  const [groups, setGroups] = useState<{name: string, teams: string[]}[]>([
+    { name: 'Group A', teams: ['', '', ''] },
+    { name: 'Group B', teams: ['', '', ''] }
+  ]);
 
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
@@ -79,6 +84,42 @@ export default function AdminTournamentsPage() {
     setPlayers(newPlayers);
   };
 
+  // Group Handlers
+  const handleAddGroup = () => {
+    const nextLetter = String.fromCharCode(65 + groups.length); // A, B, C...
+    setGroups([...groups, { name: `Group ${nextLetter}`, teams: ['', '', ''] }]);
+  };
+
+  const handleRemoveGroup = (index: number) => {
+    const newGroups = [...groups];
+    newGroups.splice(index, 1);
+    setGroups(newGroups);
+  };
+
+  const handleGroupNameChange = (index: number, value: string) => {
+    const newGroups = [...groups];
+    newGroups[index].name = value;
+    setGroups(newGroups);
+  };
+
+  const handleAddTeamToGroup = (groupIndex: number) => {
+    const newGroups = [...groups];
+    newGroups[groupIndex].teams.push('');
+    setGroups(newGroups);
+  };
+
+  const handleRemoveTeamFromGroup = (groupIndex: number, teamIndex: number) => {
+    const newGroups = [...groups];
+    newGroups[groupIndex].teams.splice(teamIndex, 1);
+    setGroups(newGroups);
+  };
+
+  const handleGroupTeamNameChange = (groupIndex: number, teamIndex: number, value: string) => {
+    const newGroups = [...groups];
+    newGroups[groupIndex].teams[teamIndex] = value;
+    setGroups(newGroups);
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
@@ -95,12 +136,17 @@ export default function AdminTournamentsPage() {
           name, 
           gameType,
           format,
+          knockoutSetting: format === 'knockout' ? parseInt(knockoutSetting) : null,
+          groups: format === 'group_stage' ? groups.map(g => ({
+            name: g.name,
+            teams: g.teams.filter(t => t.trim() !== '')
+          })).filter(g => g.teams.length >= 3) : null,
           tournamentDate,
           numberOfCourts,
           scoringType,
           pointPerMatch: scoringType === 'point' ? parseInt(pointPerMatch) : null,
           normalScoringRule: scoringType === 'normal' ? normalScoringRule : null,
-          players: validPlayers
+          players: format === 'group_stage' ? [] : validPlayers
         }),
       });
 
@@ -221,16 +267,34 @@ export default function AdminTournamentsPage() {
                       </select>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="tournamentDate">Date</Label>
-                      <Input 
-                        id="tournamentDate" 
-                        type="date"
-                        value={tournamentDate} 
-                        onChange={(e) => setTournamentDate(e.target.value)} 
-                        required 
-                      />
-                    </div>
+                    {format === 'knockout' ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="knockoutSetting">Knockout Setting</Label>
+                        <select 
+                          id="knockoutSetting"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={knockoutSetting}
+                          onChange={(e) => setKnockoutSetting(e.target.value)}
+                          required
+                        >
+                          <option value="4">4 Teams (Semi Final)</option>
+                          <option value="8">8 Teams (Quarter Final)</option>
+                          <option value="16">16 Teams</option>
+                          <option value="32">32 Teams</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="tournamentDate">Date</Label>
+                        <Input 
+                          id="tournamentDate" 
+                          type="date"
+                          value={tournamentDate} 
+                          onChange={(e) => setTournamentDate(e.target.value)} 
+                          required 
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -260,6 +324,19 @@ export default function AdminTournamentsPage() {
                       </select>
                     </div>
                   </div>
+
+                  {format === 'knockout' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="tournamentDate">Date</Label>
+                      <Input 
+                        id="tournamentDate" 
+                        type="date"
+                        value={tournamentDate} 
+                        onChange={(e) => setTournamentDate(e.target.value)} 
+                        required 
+                      />
+                    </div>
+                  )}
 
                   {scoringType === 'point' ? (
                     <div className="space-y-2">
@@ -303,39 +380,103 @@ export default function AdminTournamentsPage() {
 
                   <hr className="border-border" />
                   
-                  {/* Players Section */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <Label className="text-base">Players ({players.filter(p => p.trim() !== '').length})</Label>
-                      <Button type="button" variant="outline" size="sm" onClick={handleAddPlayerInput}>
-                        <Plus className="w-4 h-4 mr-2" /> Add Slot
-                      </Button>
+                  {/* Participants Section */}
+                  {format === 'group_stage' ? (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-base">Groups Configuration</Label>
+                        <Button type="button" variant="outline" size="sm" onClick={handleAddGroup}>
+                          <Plus className="w-4 h-4 mr-2" /> Add Group
+                        </Button>
+                      </div>
+                      <div className="space-y-6">
+                        {groups.map((group, groupIndex) => (
+                          <div key={groupIndex} className="p-4 border rounded-lg bg-muted/30 space-y-4">
+                            <div className="flex items-center justify-between">
+                              <Input 
+                                className="font-bold w-48 h-8"
+                                value={group.name}
+                                onChange={(e) => handleGroupNameChange(groupIndex, e.target.value)}
+                                placeholder={`Group ${groupIndex + 1}`}
+                              />
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-destructive h-8 px-2"
+                                onClick={() => handleRemoveGroup(groupIndex)}
+                              >
+                                <X className="w-4 h-4 mr-1" /> Remove Group
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              {group.teams.map((teamName, teamIndex) => (
+                                <div key={teamIndex} className="flex items-center gap-2">
+                                  <Input 
+                                    value={teamName} 
+                                    onChange={(e) => handleGroupTeamNameChange(groupIndex, teamIndex, e.target.value)} 
+                                    placeholder={`Team ${teamIndex + 1}`} 
+                                  />
+                                  <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-10 w-10 text-muted-foreground hover:text-destructive shrink-0"
+                                    onClick={() => handleRemoveTeamFromGroup(groupIndex, teamIndex)}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                className="border border-dashed h-10 gap-2 text-muted-foreground hover:text-primary"
+                                onClick={() => handleAddTeamToGroup(groupIndex)}
+                              >
+                                <Plus className="w-4 h-4" /> Add Team
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      {players.map((playerName, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <Input 
-                            value={playerName} 
-                            onChange={(e) => handlePlayerNameChange(index, e.target.value)} 
-                            placeholder={`Player ${index + 1}`} 
-                          />
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-10 w-10 text-muted-foreground hover:text-destructive shrink-0"
-                            onClick={() => handleRemovePlayerInput(index)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
+                  ) : (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <Label className="text-base">
+                          {format === 'knockout' ? 'Teams' : 'Players'} ({players.filter(p => p.trim() !== '').length})
+                        </Label>
+                        <Button type="button" variant="outline" size="sm" onClick={handleAddPlayerInput}>
+                          <Plus className="w-4 h-4 mr-2" /> Add {format === 'knockout' ? 'Team' : 'Player'} Slot
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {players.map((playerName, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Input 
+                              value={playerName} 
+                              onChange={(e) => handlePlayerNameChange(index, e.target.value)} 
+                              placeholder={`${format === 'knockout' ? 'Team' : 'Player'} ${index + 1}`} 
+                            />
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-10 w-10 text-muted-foreground hover:text-destructive shrink-0"
+                              onClick={() => handleRemovePlayerInput(index)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {error && <p className="text-sm text-red-500">{error}</p>}
-                  <Button type="submit" className="w-full" disabled={creating || !name || players.filter(p => p.trim() !== '').length === 0}>
-                    {creating ? 'Creating...' : 'Create Event & Add Players'}
+                  <Button type="submit" className="w-full" disabled={creating || !name}>
+                    {creating ? 'Creating...' : 'Create Event'}
                   </Button>
                 </form>
               </DialogContent>

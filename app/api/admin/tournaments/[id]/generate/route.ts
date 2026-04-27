@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateAmericanoRound, generateMexicanoRound, startTournament } from '@/lib/tournament-service';
+import { 
+  generateAmericanoRound,
+  generateMexicanoRound, 
+  generateTeamAmericanoRound, 
+  generateTeamMexicanoRound,
+  generateKnockoutRound,
+  generateGroupStageRound,
+  startTournament 
+} from '@/lib/tournament-service';
 import { supabaseServer } from '@/lib/db';
 import { cookies } from 'next/headers';
 
@@ -38,8 +46,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     let matches;
     if (tournament.format === 'americano') {
       matches = await generateAmericanoRound(id, roundNumber, scheduledAt);
+    } else if (tournament.format === 'team_americano') {
+      matches = await generateTeamAmericanoRound(id, roundNumber, scheduledAt);
     } else if (tournament.format === 'mexicano') {
       matches = await generateMexicanoRound(id, roundNumber, scheduledAt);
+    } else if (tournament.format === 'team_mexicano') {
+      matches = await generateTeamMexicanoRound(id, roundNumber, scheduledAt);
+    } else if (tournament.format === 'knockout') {
+      matches = await generateKnockoutRound(id, roundNumber, scheduledAt);
+    } else if (tournament.format === 'group_stage') {
+      matches = await generateGroupStageRound(id, roundNumber, scheduledAt);
     } else {
       return NextResponse.json({ error: 'Generation not supported for this format yet' }, { status: 400 });
     }

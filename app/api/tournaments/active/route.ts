@@ -10,12 +10,19 @@ export async function GET(request: NextRequest) {
       .select(`
         id, name, format, status,
         players:tournament_players (
-          id, points, matches_played, matches_won, matches_lost, games_won, games_lost,
+          id, points, matches_played, matches_won, matches_lost, games_won, games_lost, group_name,
           player:players (id, name, avatar_url)
+        ),
+        matches:matches (
+          id, round_number, status, winner_id,
+          team1_player1:players!team1_player1_id (name),
+          team1_player2:players!team1_player2_id (name),
+          team2_player1:players!team2_player1_id (name),
+          team2_player2:players!team2_player2_id (name)
         )
       `)
       .eq('status', 'ongoing')
-      .in('format', ['americano', 'mexicano'])
+      .in('format', ['americano', 'mexicano', 'team_americano', 'team_mexicano', 'knockout', 'group_stage'])
       .order('created_at', { ascending: false });
 
     if (error) {

@@ -192,7 +192,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
 
   const { tournament, players, matches } = data;
 
-  const isIndividualFormat = ['americano', 'mexicano'].includes(tournament.format);
+  const isIndividualFormat = ['americano', 'mexicano', 'team_americano', 'team_mexicano', 'knockout'].includes(tournament.format);
 
   // Filter out players already in the tournament
   const enrolledIds = new Set(players.map((p: any) => p.player_id));

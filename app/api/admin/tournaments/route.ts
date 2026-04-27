@@ -33,7 +33,9 @@ export async function POST(request: NextRequest) {
       scoringType,
       pointPerMatch,
       normalScoringRule,
-      players
+      players,
+      knockoutSetting,
+      groups
     } = await request.json();
 
     if (!name || !format) {
@@ -49,7 +51,9 @@ export async function POST(request: NextRequest) {
       scoringType,
       pointPerMatch,
       normalScoringRule,
-      players
+      players,
+      knockoutSetting,
+      groups
     );
     return NextResponse.json(tournament);
   } catch (error: any) {
