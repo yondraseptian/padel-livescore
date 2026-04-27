@@ -88,7 +88,7 @@ export interface Player {
 export interface Tournament {
   id: string;
   name: string;
-  format: 'knockout' | 'liga' | 'americano' | 'mexicano';
+  format: 'knockout' | 'liga' | 'americano' | 'mexicano' | 'team_americano' | 'team_mexicano';
   status: 'draft' | 'ongoing' | 'completed';
   created_at: string;
   updated_at: string;
