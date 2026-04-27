@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
           player:players (id, name, avatar_url)
         )
       `)
-      .in('status', ['ongoing', 'completed'])
+      .eq('status', 'ongoing')
       .in('format', ['americano', 'mexicano'])
       .order('created_at', { ascending: false });
 
