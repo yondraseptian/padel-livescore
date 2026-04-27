@@ -56,7 +56,13 @@ export async function POST(request: NextRequest) {
       
       if (match) {
         // Update match status to completed
-        const winnerId = matchState.winner === 'team1' ? match.team1_id : matchState.winner === 'team2' ? match.team2_id : null;
+        let winnerId = matchState.winner === 'team1' ? match.team1_id : matchState.winner === 'team2' ? match.team2_id : null;
+        
+        // For knockout/group stage where team is stored in player1_id
+        if (match.match_type === 'individual' && !winnerId) {
+          winnerId = matchState.winner === 'team1' ? match.team1_player1_id : match.team2_player1_id;
+        }
+
         await updateMatchStatus(matchId, 'completed', winnerId || undefined);
 
         if (match.tournament_id && match.match_type === 'individual') {
@@ -95,6 +101,13 @@ export async function POST(request: NextRequest) {
             matchState.team1Sets,
             matchState.team2Sets
           );
+        }
+
+        // Auto-advance for Knockout
+        const { data: tourney } = await supabaseServer.from('tournaments').select('format').eq('id', match.tournament_id).single();
+        if (tourney?.format === 'knockout' && winnerId) {
+          const { advanceKnockoutWinner } = await import('@/lib/tournament-service');
+          await advanceKnockoutWinner(matchId, winnerId);
         }
       }
     }

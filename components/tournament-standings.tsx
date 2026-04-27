@@ -10,7 +10,8 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
-import { Trophy } from 'lucide-react';
+import { Trophy, LayoutGrid, Network } from 'lucide-react';
+import { KnockoutBracket, GroupStandings } from './tournament-view';
 
 export function TournamentStandings() {
   const [tournaments, setTournaments] = useState<any[]>([]);
@@ -53,7 +54,23 @@ export function TournamentStandings() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {tournament.players?.length === 0 ? (
+            {tournament.format === 'knockout' ? (
+              <div className="mt-4">
+                <div className="flex items-center gap-2 mb-6 text-slate-400">
+                  <Network className="w-4 h-4" />
+                  <span className="text-sm font-medium">Bagan Pertandingan</span>
+                </div>
+                <KnockoutBracket matches={tournament.matches || []} />
+              </div>
+            ) : tournament.format === 'group_stage' ? (
+              <div className="mt-4">
+                <div className="flex items-center gap-2 mb-6 text-slate-400">
+                  <LayoutGrid className="w-4 h-4" />
+                  <span className="text-sm font-medium">Klasemen Grup</span>
+                </div>
+                <GroupStandings players={tournament.players || []} />
+              </div>
+            ) : tournament.players?.length === 0 ? (
               <p className="text-muted-foreground text-sm">No players enrolled yet.</p>
             ) : (
               <div className="overflow-x-auto">

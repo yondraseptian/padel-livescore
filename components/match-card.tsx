@@ -74,14 +74,21 @@ export function MatchCard({ match }: MatchCardProps) {
               />
               <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-lg">
                 {getTeamInitials(match.match_type === 'individual' 
-                  ? `${match.team1_player1?.name?.charAt(0) || ''}${match.team1_player2?.name?.charAt(0) || ''}`
+                  ? (match.team1_player2?.name 
+                      ? `${match.team1_player1?.name?.charAt(0) || ''}${match.team1_player2?.name?.charAt(0) || ''}`
+                      : (match.team1_player1?.name || ''))
                   : (match.team1?.name || '')
                 )}
               </AvatarFallback>
             </Avatar>
             <p className="font-semibold text-sm text-balance">
               {match.match_type === 'individual' 
-                ? <span className="flex flex-col"><span>{match.team1_player1?.name}</span><span>& {match.team1_player2?.name}</span></span>
+                ? (
+                  <span className="flex flex-col">
+                    <span>{match.team1_player1?.name}</span>
+                    {match.team1_player2?.name && <span>& {match.team1_player2?.name}</span>}
+                  </span>
+                )
                 : match.team1?.name}
             </p>
             {!loading && score && (
@@ -137,14 +144,21 @@ export function MatchCard({ match }: MatchCardProps) {
               />
               <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-lg">
                 {getTeamInitials(match.match_type === 'individual' 
-                  ? `${match.team2_player1?.name?.charAt(0) || ''}${match.team2_player2?.name?.charAt(0) || ''}`
+                  ? (match.team2_player2?.name 
+                      ? `${match.team2_player1?.name?.charAt(0) || ''}${match.team2_player2?.name?.charAt(0) || ''}`
+                      : (match.team2_player1?.name || ''))
                   : (match.team2?.name || '')
                 )}
               </AvatarFallback>
             </Avatar>
             <p className="font-semibold text-sm text-balance">
               {match.match_type === 'individual' 
-                ? <span className="flex flex-col"><span>{match.team2_player1?.name}</span><span>& {match.team2_player2?.name}</span></span>
+                ? (
+                  <span className="flex flex-col">
+                    <span>{match.team2_player1?.name}</span>
+                    {match.team2_player2?.name && <span>& {match.team2_player2?.name}</span>}
+                  </span>
+                )
                 : match.team2?.name}
             </p>
             {!loading && score && (

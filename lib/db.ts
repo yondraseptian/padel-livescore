@@ -90,6 +90,7 @@ export interface Tournament {
   name: string;
   format: 'knockout' | 'liga' | 'americano' | 'mexicano' | 'team_americano' | 'team_mexicano';
   status: 'draft' | 'ongoing' | 'completed';
+  knockout_setting?: number;
   created_at: string;
   updated_at: string;
 }
@@ -104,6 +105,7 @@ export interface TournamentPlayer {
   matches_lost: number;
   games_won: number;
   games_lost: number;
+  group_name?: string;
   created_at: string;
   player?: Player;
 }
