@@ -12,10 +12,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useEffect, useState } from 'react';
 import { Trophy, LayoutGrid, Network } from 'lucide-react';
 import { KnockoutBracket, GroupStandings } from './tournament-view';
+import { PlayerCardModal } from './player-card-modal';
 
 export function TournamentStandings() {
   const [tournaments, setTournaments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handlePlayerClick = (tp: any) => {
+    // Check if it's a player or a team (for knockout/team americano)
+    // We only show card for individuals
+    if (!tp.player) return;
+    
+    setSelectedPlayer({
+      ...tp.player,
+      points: tp.points,
+      matches_played: tp.matches_played,
+      matches_won: tp.matches_won,
+      matches_lost: tp.matches_lost,
+      games_won: tp.games_won,
+      games_lost: tp.games_lost
+    });
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     const fetchTournaments = async () => {
@@ -92,20 +112,23 @@ export function TournamentStandings() {
                           {index + 1}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            {tp.player?.avatar_url ? (
-                              <img
-                                src={tp.player.avatar_url}
-                                alt={tp.player.name}
-                                className="w-6 h-6 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-300">
-                                {tp.player?.name?.charAt(0)}
-                              </div>
-                            )}
-                            <span className="font-medium text-slate-200">{tp.player?.name}</span>
-                          </div>
+                            <div 
+                              className="flex items-center gap-2 cursor-pointer hover:text-amber-500 transition-colors"
+                              onClick={() => handlePlayerClick(tp)}
+                            >
+                              {tp.player?.avatar_url ? (
+                                <img
+                                  src={tp.player.avatar_url}
+                                  alt={tp.player.name}
+                                  className="w-6 h-6 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-300">
+                                  {tp.player?.name?.charAt(0)}
+                                </div>
+                              )}
+                              <span className="font-medium text-slate-200">{tp.player?.name}</span>
+                            </div>
                         </TableCell>
                         <TableCell className="text-right text-slate-400">
                           {tp.matches_played || 0}
@@ -134,6 +157,13 @@ export function TournamentStandings() {
           </CardContent>
         </Card>
       ))}
+
+      <PlayerCardModal 
+        player={selectedPlayer}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        isGlobal={false}
+      />
     </div>
   );
 }

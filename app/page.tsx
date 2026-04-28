@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { MatchCard } from '@/components/match-card';
 import { Standings } from '@/components/standings';
+import { TournamentStandings } from '@/components/tournament-standings';
 import { getUpcomingMatches } from '@/lib/match-service';
-import { Activity, Trophy, Users } from 'lucide-react';
+import { Activity, Trophy, Users, TrendingUp } from 'lucide-react';
 import { Header } from '@/components/header';
 
 export const revalidate = 60; // Revalidate every 60 seconds
@@ -125,6 +126,28 @@ export default async function Home() {
                   </div>
                 )}
               </div>
+            </section>
+
+            {/* Tournament Standings (Klasemen per Match) */}
+            <section className="mt-16 bg-slate-900/40 border border-slate-800/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm">
+              <div className="mb-8 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-amber-500/10 rounded-xl">
+                    <Trophy className="w-6 h-6 text-amber-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white tracking-tight">Klasemen Turnamen</h3>
+                    <p className="text-sm text-slate-400">Peringkat real-time turnamen yang sedang berjalan</p>
+                  </div>
+                </div>
+                <Link href="/classement">
+                  <Button variant="ghost" size="sm" className="text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 font-semibold gap-2">
+                    Lihat Peringkat Global
+                    <TrendingUp className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+              <TournamentStandings />
             </section>
           </div>
 

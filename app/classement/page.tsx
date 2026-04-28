@@ -4,8 +4,8 @@ import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Standings } from '@/components/standings';
-import { TournamentStandings } from '@/components/tournament-standings';
-import { Trophy, Medal, Target, Loader2 } from 'lucide-react';
+import { GlobalStandings } from '@/components/global-standings';
+import { Trophy, Medal, Target, Loader2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const categoryData = [
@@ -77,24 +77,37 @@ export default function KlasemenPage() {
             <Loader2 className="w-8 h-8 animate-spin mb-4 text-amber-500" />
             <p>Memuat klasemen...</p>
           </div>
-        ) : tournaments.length > 0 ? (
+        ) : (
           <section className="mb-16">
-            <div className="mb-8 flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-amber-500" />
-              <h3 className="text-2xl font-bold text-white">Peringkat Turnamen</h3>
-            </div>
-            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 mb-8">
-              <Standings />
+            <div className="mb-8 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 rounded-lg">
+                  <Trophy className="w-6 h-6 text-amber-500" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Klasemen Lanjutan</h3>
+                  <p className="text-sm text-slate-400">Peringkat akumulatif pemain dari seluruh kompetisi</p>
+                </div>
+              </div>
+              <Badge variant="outline" className="border-amber-500/30 text-amber-500 bg-amber-500/5 px-3 py-1">
+                Global Ranking
+              </Badge>
             </div>
             
-            <TournamentStandings />
+            <GlobalStandings />
+
+            {/* Team Standings (If needed, can be kept below or removed) */}
+            <div className="mt-20 mb-8 flex items-center gap-3">
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <Users className="w-6 h-6 text-blue-500" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Peringkat Tim</h3>
+                <p className="text-sm text-slate-400">Statistik performa tim di turnamen terbuka</p>
+              </div>
+            </div>
+            <Standings />
           </section>
-        ) : (
-          <div className="text-center py-20 bg-slate-900/50 border border-slate-800 rounded-xl mb-16">
-            <Trophy className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Tidak Ada Turnamen Aktif</h3>
-            <p className="text-slate-400">Saat ini tidak ada turnamen yang sedang berlangsung.</p>
-          </div>
         )}
 
         {/* Info Section */}
