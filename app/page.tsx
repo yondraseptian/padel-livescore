@@ -36,30 +36,12 @@ export default async function Home() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Hero Banner */}
-        <section className="mb-16 relative overflow-hidden">
-          <div className="relative bg-gradient-to-r from-amber-600 to-orange-600 rounded-2xl overflow-hidden">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.1)_0%,transparent_50%)]"></div>
-            </div>
-
-            {/* Content */}
-            <div className="relative p-12 md:p-16 text-center text-white">
-              <div className="mb-4 inline-flex items-center gap-2 bg-black/20 px-4 py-2 rounded-full">
-                <Trophy className="w-5 h-5" />
-                <span className="text-sm font-semibold">Turnamen Padel 2026</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-balance">
-                Saksikan Pertandingan Terbaik
-              </h2>
-              <p className="text-lg md:text-xl text-white/90 mb-6 text-balance">
-                Ikuti live score, statistik, dan peringkat pemain terbaik dalam waktu nyata
-              </p>
-              <Button size="lg" className="bg-white text-amber-600 hover:bg-slate-100 font-semibold">
-                Lihat Jadwal Lengkap
-              </Button>
-            </div>
-          </div>
+        <section className="mb-16 relative overflow-hidden rounded-2xl aspect-[21/9] md:aspect-[3/1]">
+          <img 
+            src="/banners/padeloop logo.jpeg" 
+            alt="Tournament Banner" 
+            className="w-full h-full object-cover"
+          />
         </section>
 
         {/* Main Grid Layout */}
