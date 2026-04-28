@@ -45,11 +45,12 @@ interface PlayerCardModalProps {
   isOpen: boolean;
   onClose: () => void;
   isGlobal?: boolean;
+  rank?: number;
 }
 
 type Theme = 'dark' | 'light' | 'orange' | 'glass' | 'transparent';
 
-export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true }: PlayerCardModalProps) {
+export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true, rank }: PlayerCardModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [activeTheme, setActiveTheme] = useState<Theme>('dark');
@@ -110,7 +111,7 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true }: Pl
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md bg-slate-950 border-slate-800 p-0 overflow-hidden sm:rounded-[2rem]">
+      <DialogContent className="max-w-md bg-slate-950 border-slate-800 p-0 overflow-hidden sm:rounded-[2rem]" aria-describedby={undefined}>
         {/* Hidden titles for accessibility */}
         <div className="sr-only">
           <DialogTitle>Player Achievement Card</DialogTitle>
@@ -157,44 +158,60 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true }: Pl
                   <div className="flex items-center gap-3">
                     <img src="/logo/logo.PNG" alt="Logo" className="w-12 h-auto drop-shadow-sm" />
                   </div>
-                  <div className={`px-2 py-0.5 rounded-lg text-[7px] font-bold uppercase tracking-widest ${
-                    activeTheme === 'light' ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-white/60'
-                  }`}>
-                    {isGlobal ? 'Global' : 'Tourney'}
+                  <div className="flex flex-col items-end">
+                    <div className={`px-2 py-0.5 rounded-lg text-[7px] font-black uppercase tracking-widest ${
+                      activeTheme === 'light' ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-white/60'
+                    }`}>
+                      {isGlobal ? 'Global Ranking' : 'Tournament Standing'}
+                    </div>
+                    <span className={`text-xl font-black italic ${activeTheme === 'light' ? 'text-slate-900' : 'text-amber-400'}`}>
+                      #{rank || player.rank || 1}
+                    </span>
                   </div>
                 </div>
 
                 {/* Player Identity */}
-                <div className="mb-6">
+                <div className="mb-4">
                   <h3 className={`text-4xl font-black italic uppercase tracking-tighter leading-tight ${
                     activeTheme === 'light' ? 'text-slate-950' : 'text-white'
-                  }`}>
+                  } ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_10px_rgba(0,0,0,1)]' : ''}`}>
                     {player.name}
                   </h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className={`h-1 w-12 rounded-full ${activeTheme === 'light' ? 'bg-amber-500' : 'bg-amber-400'}`} />
+                    <span className={`text-[8px] font-bold uppercase tracking-[0.3em] opacity-60 ${activeTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                      Pro Player
+                    </span>
+                  </div>
                 </div>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-x-4 gap-y-4 mb-4">
-                  <div className="flex flex-col">
-                    <span className={`text-[8px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>Points</span>
+                  <div className={`flex flex-col ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,1)]' : ''}`}>
+                    <span className={`text-[8px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>Ranking Points</span>
                     <span className={`text-5xl font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : activeTheme === 'orange' ? 'text-slate-950' : 'text-amber-400'}`}>{points}</span>
                   </div>
-                  <div className="flex flex-col">
-                    <span className={`text-[8px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>Win Rate</span>
+                  <div className={`flex flex-col ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,1)]' : ''}`}>
+                    <span className={`text-[8px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>Performance Rate</span>
                     <span className={`text-5xl font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>{winRate}%</span>
                   </div>
                   
-                  <div className="col-span-2 grid grid-cols-2 gap-4 py-3 border-y border-current/10 mt-2">
-                    <div className="flex flex-col">
-                      <span className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/30'}`}>Total Matches</span>
-                      <div className="flex items-baseline gap-1">
-                        <span className={`text-xl font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>{played}</span>
-                        <span className={`text-[8px] font-bold ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/40'}`}>({won}W)</span>
-                      </div>
+                  <div className="col-span-2 grid grid-cols-3 gap-2 py-3 border-y border-current/10 mt-2">
+                    <div className={`flex flex-col ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_4px_rgba(0,0,0,1)]' : ''}`}>
+                      <span className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/30'}`}>Record</span>
+                      <span className={`text-sm font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>
+                        {won}W - {played - won}L
+                      </span>
                     </div>
-                    <div className="flex flex-col">
+                    <div className={`flex flex-col ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_4px_rgba(0,0,0,1)]' : ''}`}>
+                      <span className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/30'}`}>Total Matches</span>
+                      <span className={`text-sm font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>
+                        {played}
+                      </span>
+                    </div>
+                    <div className={`flex flex-col ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_4px_rgba(0,0,0,1)]' : ''}`}>
                       <span className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/30'}`}>Game Diff</span>
-                      <span className={`text-xl font-black italic tabular-nums leading-none ${diff > 0 ? 'text-green-500' : diff < 0 ? 'text-red-500' : activeTheme === 'light' ? 'text-slate-400' : 'text-white/40'}`}>
+                      <span className={`text-sm font-black italic tabular-nums leading-none ${diff > 0 ? 'text-green-500' : diff < 0 ? 'text-red-500' : activeTheme === 'light' ? 'text-slate-400' : 'text-white/40'}`}>
                         {diff > 0 ? '+' : ''}{diff}
                       </span>
                     </div>
