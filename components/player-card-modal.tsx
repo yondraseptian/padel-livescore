@@ -160,7 +160,7 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true }: Pl
                   <>
                     {/* Brand Logo (Top Left) */}
                     <div className="absolute top-6 left-6">
-                      <img src="/logo/logo.png" alt="Logo" className="w-16 h-auto drop-shadow-lg" />
+                      <img src="/logo/logo.PNG" alt="Logo" className="w-16 h-auto drop-shadow-lg" />
                     </div>
 
                     <div className="absolute bottom-0 left-0 right-0 flex overflow-hidden bg-white text-slate-950 border-t-2 border-slate-100">
