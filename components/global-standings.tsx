@@ -30,10 +30,12 @@ export function GlobalStandings() {
   const [standings, setStandings] = useState<GlobalStanding[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState<GlobalStanding | null>(null);
+  const [selectedRank, setSelectedRank] = useState<number | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handlePlayerClick = (player: GlobalStanding) => {
+  const handlePlayerClick = (player: GlobalStanding, rank: number) => {
     setSelectedPlayer(player);
+    setSelectedRank(rank);
     setIsModalOpen(true);
   };
 
@@ -188,7 +190,7 @@ export function GlobalStandings() {
                         </div>
                         <div 
                           className="cursor-pointer group/name"
-                          onClick={() => handlePlayerClick(player)}
+                          onClick={() => handlePlayerClick(player, index + 1)}
                         >
                           <p className="font-bold text-white group-hover/name:text-amber-500 transition-colors">{player.name}</p>
                           <p className="text-[10px] text-slate-500 font-medium">ID: {player.id.slice(0, 8)}</p>
@@ -260,6 +262,7 @@ export function GlobalStandings() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         isGlobal={true}
+        rank={selectedRank}
       />
     </div>
   );

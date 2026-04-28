@@ -17,24 +17,23 @@ import { PlayerCardModal } from './player-card-modal';
 export function TournamentStandings() {
   const [tournaments, setTournaments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activePlayer, setActivePlayer] = useState<any | null>(null);
+  const [activeRank, setActiveRank] = useState<number | undefined>();
 
-  const handlePlayerClick = (tp: any) => {
-    // Check if it's a player or a team (for knockout/team americano)
-    // We only show card for individuals
-    if (!tp.player) return;
-    
-    setSelectedPlayer({
+  const handlePlayerClick = (tp: any, rank: number) => {
+    if (!tp?.player) return;
+    // Merge player identity with tournament stats so the modal has all data
+    const mergedPlayer = {
       ...tp.player,
       points: tp.points,
       matches_played: tp.matches_played,
       matches_won: tp.matches_won,
       matches_lost: tp.matches_lost,
       games_won: tp.games_won,
-      games_lost: tp.games_lost
-    });
-    setIsModalOpen(true);
+      games_lost: tp.games_lost,
+    };
+    setActivePlayer(mergedPlayer);
+    setActiveRank(rank);
   };
 
   useEffect(() => {
@@ -114,7 +113,7 @@ export function TournamentStandings() {
                         <TableCell>
                             <div 
                               className="flex items-center gap-2 cursor-pointer hover:text-amber-500 transition-colors"
-                              onClick={() => handlePlayerClick(tp)}
+                              onClick={() => handlePlayerClick(tp, index + 1)}
                             >
                               {tp.player?.avatar_url ? (
                                 <img
@@ -159,10 +158,14 @@ export function TournamentStandings() {
       ))}
 
       <PlayerCardModal 
-        player={selectedPlayer}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        player={activePlayer}
+        isOpen={!!activePlayer}
+        onClose={() => {
+            setActivePlayer(null);
+            setActiveRank(undefined);
+        }}
         isGlobal={false}
+        rank={activeRank}
       />
     </div>
   );
