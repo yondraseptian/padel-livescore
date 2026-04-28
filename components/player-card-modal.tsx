@@ -48,7 +48,7 @@ interface PlayerCardModalProps {
   rank?: number;
 }
 
-type Theme = 'dark' | 'light' | 'orange' | 'glass' | 'transparent';
+type Theme = 'dark' | 'light' | 'brand' | 'teal' | 'transparent';
 
 export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true, rank }: PlayerCardModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -65,12 +65,12 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true, rank
   const winRate = played ? Math.round((won! / played!) * 100) : 0;
   const diff = (gamesWon || 0) - (gamesLost || 0);
 
-  const themes: { id: Theme; name: string; class: string; btn: string }[] = [
-    { id: 'dark', name: 'Elite Dark', class: 'bg-slate-950 text-white', btn: 'bg-slate-800' },
-    { id: 'light', name: 'Minimalist', class: 'bg-white text-slate-950', btn: 'bg-slate-200' },
-    { id: 'orange', name: 'Padel Brand', class: 'bg-amber-500 text-slate-950', btn: 'bg-amber-600' },
-    { id: 'glass', name: 'Cinematic', class: 'text-white overflow-hidden', btn: 'bg-slate-800/50' },
-    { id: 'transparent', name: 'Text Only', class: 'bg-transparent text-white', btn: 'border-dashed border-slate-700' },
+  const themes: { id: Theme; name: string; previewClass: string }[] = [
+    { id: 'dark',        name: 'Brand Dark',   previewClass: 'bg-[#282c90]' },
+    { id: 'light',       name: 'Minimalist',   previewClass: 'bg-[#fefefe]' },
+    { id: 'brand',       name: 'Brand Blue',   previewClass: 'bg-gradient-to-br from-[#282c90] to-[#48c4c4]' },
+    { id: 'teal',        name: 'Brand Teal',   previewClass: 'bg-[#48c4c4]' },
+    { id: 'transparent', name: 'Text Only',    previewClass: 'bg-slate-900 border border-dashed border-slate-600' },
   ];
 
   const handleDownload = async () => {
@@ -78,14 +78,13 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true, rank
     
     try {
       setDownloading(true);
-      // Ensure all images are loaded
       await new Promise(resolve => setTimeout(resolve, 500));
       
       if (!cardRef.current) throw new Error('Card element not found');
 
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
-        pixelRatio: 3, // Increased quality
+        pixelRatio: 3,
         skipFonts: false,
       });
       
@@ -109,77 +108,86 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true, rank
     }
   };
 
+  // Theme-derived helpers
+  const isLight = activeTheme === 'light';
+  const isTeal  = activeTheme === 'teal';
+  const isTransparent = activeTheme === 'transparent';
+
+  const accentText   = isLight ? 'text-[#282c90]' : isTeal ? 'text-[#282c90]' : 'text-[#48c4c4]';
+  const primaryText  = isLight ? 'text-[#282c90]' : 'text-[#fefefe]';
+  const mutedText    = isLight ? 'text-[#282c90]/50' : 'text-[#fefefe]/40';
+  const veryMuted    = isLight ? 'text-[#282c90]/40' : 'text-[#fefefe]/30';
+  const accentBar    = isLight ? 'bg-[#282c90]' : isTeal ? 'bg-[#282c90]' : 'bg-[#48c4c4]';
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md bg-slate-950 border-slate-800 p-0 overflow-hidden sm:rounded-[2rem]" aria-describedby={undefined}>
+      <DialogContent className="w-full max-w-md bg-[#1a1e6e] border-[#282c90] p-0 overflow-hidden rounded-none sm:rounded-[2rem] mx-0 sm:mx-auto" aria-describedby={undefined}>
         {/* Hidden titles for accessibility */}
         <div className="sr-only">
           <DialogTitle>Player Achievement Card</DialogTitle>
           <p>This modal displays player statistics in a shareable card format.</p>
         </div>
         
-        <div className="p-0 flex flex-col h-full max-h-[90vh]">
+        <div className="p-0 flex flex-col h-full max-h-[90dvh]">
           {/* Preview Area */}
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center bg-slate-900/50">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 flex flex-col items-center justify-center bg-[#282c90]/30">
             <div 
               ref={cardRef}
-              className={`relative w-[400px] aspect-[1.1/1] rounded-[1.5rem] shadow-2xl overflow-hidden transition-all duration-500 border-2 ${
-                activeTheme === 'dark' ? 'bg-slate-950 border-slate-800' :
-                activeTheme === 'light' ? 'bg-slate-100 border-slate-200' :
-                activeTheme === 'orange' ? 'bg-amber-600 border-amber-700' :
-                activeTheme === 'transparent' ? 'bg-transparent border-none shadow-none' :
-                'bg-slate-900 border-slate-800'
+              className={`relative w-full max-w-[400px] aspect-[1.1/1] rounded-[1.2rem] sm:rounded-[1.5rem] shadow-2xl overflow-hidden transition-all duration-500 border-2 ${
+                activeTheme === 'dark'        ? 'bg-[#282c90] border-[#48c4c4]/30' :
+                activeTheme === 'light'       ? 'bg-[#fefefe] border-[#282c90]/20' :
+                activeTheme === 'brand'       ? 'bg-[#282c90] border-[#48c4c4]/50' :
+                activeTheme === 'teal'        ? 'bg-[#48c4c4] border-[#282c90]/30' :
+                'bg-transparent border-none shadow-none'
               }`}
             >
               {/* Background Layer */}
               {activeTheme !== 'transparent' && (
                 <div className="absolute inset-0">
-                  <img 
-                    src="/images/padel-bg.png" 
-                    alt="Background" 
-                    crossOrigin="anonymous"
-                    className="w-full h-full object-cover opacity-40 scale-110" 
-                  />
                   <div className={`absolute inset-0 ${
-                    activeTheme === 'dark' ? 'bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent' :
-                    activeTheme === 'light' ? 'bg-gradient-to-t from-white via-white/20 to-transparent' :
-                    activeTheme === 'orange' ? 'bg-gradient-to-t from-amber-600 via-amber-600/40 to-transparent' :
-                    'bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent'
+                    activeTheme === 'dark'  ? 'bg-gradient-to-br from-[#282c90] via-[#1e2275] to-[#282c90]' :
+                    activeTheme === 'light' ? 'bg-gradient-to-br from-[#fefefe] via-[#f0f4ff] to-[#e8eeff]' :
+                    activeTheme === 'brand' ? 'bg-gradient-to-br from-[#282c90] via-[#1e2275] to-[#48c4c4]' :
+                    /* teal */                'bg-gradient-to-br from-[#48c4c4] via-[#3bb8b8] to-[#282c90]'
                   }`} />
+                  {/* Subtle teal glow accent top-right */}
+                  {(activeTheme === 'dark' || activeTheme === 'brand') && (
+                    <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-[#48c4c4]/10 blur-3xl" />
+                  )}
                 </div>
               )}
 
-              {/* Content Layout (Unified Compact Grid) */}
-              <div className={`relative z-10 h-full w-full flex flex-col p-6 ${
-                activeTheme === 'transparent' ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]' : ''
+              {/* Content Layout */}
+              <div className={`relative z-10 h-full w-full flex flex-col p-4 sm:p-6 ${
+                isTransparent ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]' : ''
               }`}>
                 {/* Top: Branding & Info */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <img src="/logo/logo.PNG" alt="Logo" className="w-12 h-auto drop-shadow-sm" />
+                    <img src="/logo/logo.PNG" alt="Logo" className="w-20 h-auto drop-shadow-sm" />
                   </div>
                   <div className="flex flex-col items-end">
-                    <div className={`px-2 py-0.5 rounded-lg text-[7px] font-black uppercase tracking-widest ${
-                      activeTheme === 'light' ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-white/60'
+                    <div className={`px-3 py-1 rounded-lg text-[11px] font-black uppercase tracking-widest ${
+                      isLight ? 'bg-[#282c90]/10 text-[#282c90]/60' : 'bg-[#fefefe]/10 text-[#fefefe]/60'
                     }`}>
                       {isGlobal ? 'Global Ranking' : 'Tournament Standing'}
                     </div>
-                    <span className={`text-xl font-black italic ${activeTheme === 'light' ? 'text-slate-900' : 'text-amber-400'}`}>
-                      #{rank || player.rank || 1}
+                    <span className={`text-2xl font-black italic ${accentText}`}>
+                      #{rank || (player as any).rank || 1}
                     </span>
                   </div>
                 </div>
 
                 {/* Player Identity */}
                 <div className="mb-4">
-                  <h3 className={`text-4xl font-black italic uppercase tracking-tighter leading-tight ${
-                    activeTheme === 'light' ? 'text-slate-950' : 'text-white'
-                  } ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_10px_rgba(0,0,0,1)]' : ''}`}>
+                  <h3 className={`text-4xl font-black italic uppercase tracking-tighter leading-tight ${primaryText} ${
+                    isTransparent ? 'drop-shadow-[0_2px_10px_rgba(0,0,0,1)]' : ''
+                  }`}>
                     {player.name}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className={`h-1 w-12 rounded-full ${activeTheme === 'light' ? 'bg-amber-500' : 'bg-amber-400'}`} />
-                    <span className={`text-[8px] font-bold uppercase tracking-[0.3em] opacity-60 ${activeTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                    <div className={`h-1 w-12 rounded-full ${accentBar}`} />
+                    <span className={`text-[11px] font-bold uppercase tracking-[0.3em] opacity-60 ${primaryText}`}>
                       Pro Player
                     </span>
                   </div>
@@ -187,70 +195,62 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true, rank
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-x-4 gap-y-4 mb-4">
-                  <div className={`flex flex-col ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,1)]' : ''}`}>
-                    <span className={`text-[8px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>Ranking Points</span>
-                    <span className={`text-5xl font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : activeTheme === 'orange' ? 'text-slate-950' : 'text-amber-400'}`}>{points}</span>
+                  <div className={`flex flex-col ${isTransparent ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,1)]' : ''}`}>
+                    <span className={`text-[11px] font-bold uppercase tracking-widest mb-0.5 ${mutedText}`}>Ranking Points</span>
+                    <span className={`text-5xl font-black italic tabular-nums leading-none ${accentText}`}>{points}</span>
                   </div>
-                  <div className={`flex flex-col ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,1)]' : ''}`}>
-                    <span className={`text-[8px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>Performance Rate</span>
-                    <span className={`text-5xl font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>{winRate}%</span>
+                  <div className={`flex flex-col ${isTransparent ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,1)]' : ''}`}>
+                    <span className={`text-[11px] font-bold uppercase tracking-widest mb-0.5 ${mutedText}`}>Performance Rate</span>
+                    <span className={`text-5xl font-black italic tabular-nums leading-none ${primaryText}`}>{winRate}%</span>
                   </div>
                   
-                  <div className="col-span-2 grid grid-cols-3 gap-2 py-3 border-y border-current/10 mt-2">
-                    <div className={`flex flex-col ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_4px_rgba(0,0,0,1)]' : ''}`}>
-                      <span className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/30'}`}>Record</span>
-                      <span className={`text-sm font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>
-                        {won}W - {played - won}L
+                  <div className={`col-span-2 grid grid-cols-3 gap-2 py-3 border-y mt-2 ${
+                    isLight ? 'border-[#282c90]/10' : 'border-[#fefefe]/10'
+                  }`}>
+                    <div className={`flex flex-col ${isTransparent ? 'drop-shadow-[0_2px_4px_rgba(0,0,0,1)]' : ''}`}>
+                      <span className={`text-xs font-bold uppercase tracking-widest mb-1 ${veryMuted}`}>Record</span>
+                      <span className={`text-2xl font-black italic tabular-nums leading-none ${primaryText}`}>
+                        {won}W - {(played ?? 0) - (won ?? 0)}L
                       </span>
                     </div>
-                    <div className={`flex flex-col ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_4px_rgba(0,0,0,1)]' : ''}`}>
-                      <span className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/30'}`}>Total Matches</span>
-                      <span className={`text-sm font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>
+                    <div className={`flex flex-col ${isTransparent ? 'drop-shadow-[0_2px_4px_rgba(0,0,0,1)]' : ''}`}>
+                      <span className={`text-xs font-bold uppercase tracking-widest mb-1 ${veryMuted}`}>Total Matches</span>
+                      <span className={`text-2xl font-black italic tabular-nums leading-none ${primaryText}`}>
                         {played}
                       </span>
                     </div>
-                    <div className={`flex flex-col ${activeTheme === 'transparent' ? 'drop-shadow-[0_2px_4px_rgba(0,0,0,1)]' : ''}`}>
-                      <span className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/30'}`}>Game Diff</span>
-                      <span className={`text-sm font-black italic tabular-nums leading-none ${diff > 0 ? 'text-green-500' : diff < 0 ? 'text-red-500' : activeTheme === 'light' ? 'text-slate-400' : 'text-white/40'}`}>
+                    <div className={`flex flex-col ${isTransparent ? 'drop-shadow-[0_2px_4px_rgba(0,0,0,1)]' : ''}`}>
+                      <span className={`text-xs font-bold uppercase tracking-widest mb-1 ${veryMuted}`}>Game Diff</span>
+                      <span className={`text-2xl font-black italic tabular-nums leading-none ${
+                        diff > 0 ? 'text-green-400' : diff < 0 ? 'text-red-400' : mutedText
+                      }`}>
                         {diff > 0 ? '+' : ''}{diff}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Footer */}
-                <div className="mt-auto flex justify-end items-center opacity-40">
-                  <span className={`text-[7px] font-black italic ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>
-                    Padel Livescore 2026
-                  </span>
-                </div>
               </div>
             </div>
           </div>
 
-          {/* Theme Selector (Strava Style) */}
-          <div className="p-6 bg-slate-950 border-t border-slate-800">
-            <p className="text-[10px] font-bold uppercase text-slate-500 mb-4 tracking-widest text-center">
+          {/* Theme Selector */}
+          <div className="p-4 sm:p-6 bg-[#1a1e6e] border-t border-[#282c90]">
+            <p className="text-[10px] font-bold uppercase text-[#48c4c4]/60 mb-4 tracking-widest text-center">
               Choose Style
             </p>
-            <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
               {themes.map((theme) => (
                 <button
                   key={theme.id}
                   onClick={() => setActiveTheme(theme.id)}
                   className={`relative w-12 h-12 rounded-xl transition-all duration-300 overflow-hidden border-2 ${
-                    activeTheme === theme.id ? 'border-amber-500 scale-110 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'border-slate-800'
+                    activeTheme === theme.id
+                      ? 'border-[#48c4c4] scale-110 shadow-[0_0_15px_rgba(72,196,196,0.35)]'
+                      : 'border-[#282c90]'
                   }`}
                 >
-                  <div className={`absolute inset-0 ${theme.id === 'glass' ? 'bg-slate-700' : theme.id === 'transparent' ? 'bg-slate-900 border border-slate-800' : theme.class}`} />
-                  {theme.id === 'glass' && (
-                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/40 to-orange-500/40" />
-                  )}
-                  {theme.id === 'transparent' && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-6 h-6 border border-dashed border-slate-500 rounded-md" />
-                    </div>
-                  )}
+                  <div className={`absolute inset-0 ${theme.previewClass}`} />
                   {activeTheme === theme.id && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                       <Check className="w-5 h-5 text-white" />
@@ -263,18 +263,18 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true, rank
             <div className="flex gap-3">
               <Button 
                 variant="outline" 
-                className="flex-1 bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 rounded-2xl h-12"
+                className="flex-1 bg-[#282c90]/50 border-[#48c4c4]/30 text-[#fefefe] hover:bg-[#282c90] rounded-2xl h-12"
                 onClick={onClose}
               >
                 Cancel
               </Button>
               <Button 
-                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white gap-2 font-bold rounded-2xl h-12 shadow-lg shadow-amber-900/20"
+                className="flex-1 bg-[#48c4c4] hover:bg-[#3bb8b8] text-[#282c90] gap-2 font-bold rounded-2xl h-12 shadow-lg shadow-[#48c4c4]/20"
                 onClick={handleDownload}
                 disabled={downloading}
               >
                 {downloading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-[#282c90]/30 border-t-[#282c90] rounded-full animate-spin" />
                 ) : (
                   <>
                     <Download className="w-4 h-4" />

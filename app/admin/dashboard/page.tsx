@@ -168,8 +168,8 @@ export default function AdminDashboardPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="min-h-screen bg-[#fefefe] flex items-center justify-center">
+        <p className="text-[#282c90]/50">Loading...</p>
       </div>
     );
   }
@@ -179,27 +179,28 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-[#fefefe]">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 border-b border-[#48c4c4]/20 bg-[#fefefe]/95 backdrop-blur supports-[backdrop-filter]:bg-[#fefefe]/90 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Activity className="w-6 h-6 text-primary shrink-0" />
-            <span className="font-bold hidden sm:inline">Padel LiveScore</span>
+            <div className="bg-[#282c90] rounded-xl px-3 py-1.5">
+              <img src="/logo/logo.PNG" alt="Logo" className="h-7 w-auto" />
+            </div>
           </Link>
           <div className="flex items-center gap-3 sm:gap-4">
-            <span className="text-xs sm:text-sm font-medium text-primary">Matches</span>
-            <Link href="/admin/tournaments" className="text-xs sm:text-sm font-medium hover:text-primary transition-colors">
+            <span className="text-xs sm:text-sm font-bold text-[#48c4c4] underline underline-offset-4">Matches</span>
+            <Link href="/admin/tournaments" className="text-xs sm:text-sm font-medium text-[#282c90]/50 hover:text-[#282c90] transition-colors">
               Tournaments
             </Link>
-            <Link href="/admin/players" className="text-xs sm:text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/admin/players" className="text-xs sm:text-sm font-medium text-[#282c90]/50 hover:text-[#282c90] transition-colors">
               Players
             </Link>
             <Button
               variant="outline"
               size="sm"
               onClick={handleLogout}
-              className="gap-2 ml-2 sm:ml-4 px-2 sm:px-3"
+              className="gap-2 ml-2 sm:ml-4 px-2 sm:px-3 border-[#48c4c4]/30 text-[#282c90] hover:bg-[#48c4c4]/10"
             >
               <LogOut className="w-4 h-4 shrink-0" />
               <span className="hidden sm:inline">Logout</span>
@@ -212,8 +213,8 @@ export default function AdminDashboardPage() {
       <main className="max-w-6xl mx-auto px-4 py-12">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Match Score Management</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold text-[#282c90] mb-2">Match Score Management</h1>
+            <p className="text-[#282c90]/50">
               Select a match and enter the scores
             </p>
           </div>
@@ -238,16 +239,15 @@ export default function AdminDashboardPage() {
           </Card>
         ) : (
           <div className="grid lg:grid-cols-4 gap-6">
-            {/* Match Selection */}
             <div className="lg:col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Matches</CardTitle>
-                  <CardDescription>
+              <Card className="bg-white border-[#48c4c4]/20 shadow-sm">
+                <CardHeader className="border-b border-[#48c4c4]/15 bg-[#282c90]/3">
+                  <CardTitle className="text-[#282c90]">Matches</CardTitle>
+                  <CardDescription className="text-[#282c90]/40">
                     {matches.length} match{matches.length !== 1 ? 'es' : ''} available
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 pt-4">
                   {/* Live Matches */}
                   {matches.filter(m => m.status === 'live').length > 0 && (
                     <div className="space-y-2">
@@ -260,22 +260,22 @@ export default function AdminDashboardPage() {
                           onClick={() => setSelectedMatch(match)}
                           className={`w-full text-left p-3 rounded-lg border transition-colors ${
                             selectedMatch?.id === match.id
-                              ? 'bg-primary text-primary-foreground border-primary'
-                              : 'border-border hover:bg-muted'
+                              ? 'bg-[#48c4c4] text-white border-[#48c4c4]'
+                              : 'border-[#282c90]/10 text-[#282c90] hover:bg-[#282c90]/5'
                           }`}
                         >
                           <div className="text-sm font-medium mb-1 text-balance">
-                            {match.match_type === 'individual' 
+                            {match.match_type === 'individual'
                               ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` - ${match.team1_player2.name}` : ''} vs ${match.team2_player1?.name}${match.team2_player2?.name ? ` - ${match.team2_player2.name}` : ''}`
                               : `${match.team1?.name || 'Team 1'} vs ${match.team2?.name || 'Team 2'}`
                             }
                           </div>
                           <div className="flex justify-between items-end">
-                            <div className="text-[10px] opacity-70">
+                            <div className="text-[10px] opacity-60">
                               {new Date(match.scheduled_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                             </div>
                             {match.tournament_id && (
-                              <Link 
+                              <Link
                                 href={`/admin/tournaments/${match.tournament_id}`}
                                 className="p-1 hover:bg-black/10 rounded transition-colors"
                                 onClick={(e) => e.stopPropagation()}
@@ -292,29 +292,29 @@ export default function AdminDashboardPage() {
                   {/* Scheduled Matches */}
                   {matches.filter(m => m.status === 'scheduled').length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-xs font-bold uppercase text-amber-500">Scheduled</p>
+                      <p className="text-xs font-bold uppercase text-[#48c4c4]">Scheduled</p>
                       {matches.filter(m => m.status === 'scheduled').map((match) => (
                         <button
                           key={match.id}
                           onClick={() => setSelectedMatch(match)}
                           className={`w-full text-left p-3 rounded-lg border transition-colors ${
                             selectedMatch?.id === match.id
-                              ? 'bg-primary text-primary-foreground border-primary'
-                              : 'border-border hover:bg-muted'
+                              ? 'bg-[#48c4c4] text-white border-[#48c4c4]'
+                              : 'border-[#282c90]/10 text-[#282c90] hover:bg-[#282c90]/5'
                           }`}
                         >
                           <div className="text-sm font-medium mb-1 text-balance">
-                            {match.match_type === 'individual' 
+                            {match.match_type === 'individual'
                               ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` - ${match.team1_player2.name}` : ''} vs ${match.team2_player1?.name}${match.team2_player2?.name ? ` - ${match.team2_player2.name}` : ''}`
                               : `${match.team1?.name || 'Team 1'} vs ${match.team2?.name || 'Team 2'}`
                             }
                           </div>
                           <div className="flex justify-between items-end">
-                            <div className="text-[10px] opacity-70">
+                            <div className="text-[10px] opacity-60">
                               {new Date(match.scheduled_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                             </div>
                             {match.tournament_id && (
-                              <Link 
+                              <Link
                                 href={`/admin/tournaments/${match.tournament_id}`}
                                 className="p-1 hover:bg-black/10 rounded transition-colors"
                                 onClick={(e) => e.stopPropagation()}
@@ -331,26 +331,24 @@ export default function AdminDashboardPage() {
                   {/* Completed Matches */}
                   {matches.filter(m => m.status === 'completed').length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-xs font-bold uppercase text-muted-foreground">Completed</p>
+                      <p className="text-xs font-bold uppercase text-[#282c90]/30">Completed</p>
                       {matches.filter(m => m.status === 'completed').map((match) => (
                         <button
                           key={match.id}
                           onClick={() => setSelectedMatch(match)}
                           className={`w-full text-left p-3 rounded-lg border opacity-60 transition-colors ${
                             selectedMatch?.id === match.id
-                              ? 'bg-primary/20 text-foreground border-primary/50'
-                              : 'border-border hover:bg-muted'
+                              ? 'bg-[#282c90]/10 text-[#282c90] border-[#282c90]/30'
+                              : 'border-[#282c90]/10 text-[#282c90] hover:bg-[#282c90]/5'
                           }`}
                         >
                           <div className="text-sm font-medium mb-1 text-balance">
-                            {match.match_type === 'individual' 
+                            {match.match_type === 'individual'
                               ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` - ${match.team1_player2.name}` : ''} vs ${match.team2_player1?.name}${match.team2_player2?.name ? ` - ${match.team2_player2.name}` : ''}`
                               : `${match.team1?.name || 'Team 1'} vs ${match.team2?.name || 'Team 2'}`
                             }
                           </div>
-                          <div className="text-[10px] opacity-70">
-                            Completed
-                          </div>
+                          <div className="text-[10px] opacity-60">Completed</div>
                         </button>
                       ))}
                     </div>
