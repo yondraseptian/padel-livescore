@@ -164,7 +164,7 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true, rank
                 {/* Top: Branding & Info */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <img src="/logo/logo.PNG" alt="Logo" className="w-20 h-auto drop-shadow-sm" />
+                    <img src="/logo/logo.png" alt="Logo" className="w-20 h-auto drop-shadow-sm" />
                   </div>
                   <div className="flex flex-col items-end">
                     <div className={`px-3 py-1 rounded-lg text-[11px] font-black uppercase tracking-widest ${

@@ -22,7 +22,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
           <div className="bg-[#282c90] rounded-xl px-3 py-1.5">
-            <img src="/logo/logo.PNG" alt="Padel LiveScore" className="h-8 w-auto" />
+            <img src="/logo/logo.png" alt="Padel LiveScore" className="h-8 w-auto" />
           </div>
         </Link>
 
