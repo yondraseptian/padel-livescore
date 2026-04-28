@@ -206,6 +206,9 @@ export default function AdminTournamentsPage() {
               Matches
             </Link>
             <span className="text-xs sm:text-sm text-primary font-medium">Tournaments</span>
+            <Link href="/admin/players" className="text-xs sm:text-sm font-medium hover:text-primary transition-colors">
+              Players
+            </Link>
             <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2 ml-2 sm:ml-4 px-2 sm:px-3">
               <LogOut className="w-4 h-4 shrink-0" />
               <span className="hidden sm:inline">Logout</span>

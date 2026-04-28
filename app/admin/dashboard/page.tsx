@@ -192,6 +192,9 @@ export default function AdminDashboardPage() {
             <Link href="/admin/tournaments" className="text-xs sm:text-sm font-medium hover:text-primary transition-colors">
               Tournaments
             </Link>
+            <Link href="/admin/players" className="text-xs sm:text-sm font-medium hover:text-primary transition-colors">
+              Players
+            </Link>
             <Button
               variant="outline"
               size="sm"
