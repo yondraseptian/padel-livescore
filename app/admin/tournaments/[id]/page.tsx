@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, ArrowLeft, Plus, Users, Play, Pencil } from 'lucide-react';
+import { Activity, ArrowLeft, Plus, Users, Play, Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAdmin } from '@/hooks/use-admin';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -111,6 +111,19 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
       console.error('Failed to generate round', error);
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleDeleteTournament = async () => {
+    if (!confirm('Apakah Anda yakin ingin MENGHAPUS turnamen ini? Semua data pertandingan dan klasemen akan hilang secara permanen.')) return;
+    
+    try {
+      await fetch(`/api/admin/tournaments/${id}`, {
+        method: 'DELETE',
+      });
+      router.push('/admin/tournaments');
+    } catch (error) {
+      console.error('Failed to delete tournament', error);
     }
   };
 
@@ -221,6 +234,16 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             </div>
           </div>
           <div className="flex gap-2">
+            {tournament.status === 'completed' && (
+              <Button 
+                variant="outline" 
+                className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                onClick={handleDeleteTournament}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Hapus Tournament
+              </Button>
+            )}
             {tournament.status !== 'completed' && (
               <Button 
                 variant="outline" 
@@ -234,7 +257,9 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             {isIndividualFormat && tournament.status !== 'completed' && (
               <Dialog open={isGenerateRoundOpen} onOpenChange={setIsGenerateRoundOpen}>
                 <DialogTrigger asChild>
-                  <Button disabled={generating || players.length < 4 || players.length % 4 !== 0}>
+                  <Button disabled={generating || 
+                    (['americano', 'mexicano'].includes(tournament.format) ? (players.length < 4 || players.length % 4 !== 0) : (players.length < 2 || players.length % 2 !== 0))
+                  }>
                     <Play className="w-4 h-4 mr-2" />
                     {generating ? 'Generating...' : 'Generate Next Round'}
                   </Button>
@@ -330,11 +355,11 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                         </div>
                         <div className="flex-1 flex flex-col sm:flex-row items-center gap-4 w-full">
                           <div className="flex-1 text-center sm:text-right font-semibold">
-                            {match.team1_player1?.name} - {match.team1_player2?.name}
+                            {match.team1_player1?.name} {match.team1_player2?.name ? `- ${match.team1_player2?.name}` : ''}
                           </div>
                           <div className="text-muted-foreground text-xs px-2 py-1 bg-muted rounded">VS</div>
                           <div className="flex-1 text-center sm:text-left font-semibold">
-                            {match.team2_player1?.name} - {match.team2_player2?.name}
+                            {match.team2_player1?.name} {match.team2_player2?.name ? `- ${match.team2_player2?.name}` : ''}
                           </div>
                         </div>
                         <div className="text-right min-w-[100px] flex items-center justify-end gap-2">
@@ -399,61 +424,65 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             <form onSubmit={handleEditMatchPlayersSubmit} className="space-y-4 pt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Tim 1 - Pemain 1</Label>
+                  <Label>{['americano', 'mexicano'].includes(tournament.format) ? 'Tim 1 - Pemain 1' : 'Tim 1'}</Label>
                   <select
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     value={matchPlayer1}
                     onChange={(e) => setMatchPlayer1(e.target.value)}
                     required
                   >
-                    <option value="" disabled>Pilih Pemain</option>
+                    <option value="" disabled>Pilih {['americano', 'mexicano'].includes(tournament.format) ? 'Pemain' : 'Tim'}</option>
                     {players.map((p: any) => (
                       <option key={p.player.id} value={p.player.id}>{p.player.name}</option>
                     ))}
                   </select>
                 </div>
+                {['americano', 'mexicano'].includes(tournament.format) && (
+                  <div className="space-y-2">
+                    <Label>Tim 1 - Pemain 2</Label>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={matchPlayer2}
+                      onChange={(e) => setMatchPlayer2(e.target.value)}
+                      required
+                    >
+                      <option value="" disabled>Pilih Pemain</option>
+                      {players.map((p: any) => (
+                        <option key={p.player.id} value={p.player.id}>{p.player.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="space-y-2">
-                  <Label>Tim 1 - Pemain 2</Label>
-                  <select
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={matchPlayer2}
-                    onChange={(e) => setMatchPlayer2(e.target.value)}
-                    required
-                  >
-                    <option value="" disabled>Pilih Pemain</option>
-                    {players.map((p: any) => (
-                      <option key={p.player.id} value={p.player.id}>{p.player.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Tim 2 - Pemain 1</Label>
+                  <Label>{['americano', 'mexicano'].includes(tournament.format) ? 'Tim 2 - Pemain 1' : 'Tim 2'}</Label>
                   <select
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     value={matchPlayer3}
                     onChange={(e) => setMatchPlayer3(e.target.value)}
                     required
                   >
-                    <option value="" disabled>Pilih Pemain</option>
+                    <option value="" disabled>Pilih {['americano', 'mexicano'].includes(tournament.format) ? 'Pemain' : 'Tim'}</option>
                     {players.map((p: any) => (
                       <option key={p.player.id} value={p.player.id}>{p.player.name}</option>
                     ))}
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Tim 2 - Pemain 2</Label>
-                  <select
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={matchPlayer4}
-                    onChange={(e) => setMatchPlayer4(e.target.value)}
-                    required
-                  >
-                    <option value="" disabled>Pilih Pemain</option>
-                    {players.map((p: any) => (
-                      <option key={p.player.id} value={p.player.id}>{p.player.name}</option>
-                    ))}
-                  </select>
-                </div>
+                {['americano', 'mexicano'].includes(tournament.format) && (
+                  <div className="space-y-2">
+                    <Label>Tim 2 - Pemain 2</Label>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={matchPlayer4}
+                      onChange={(e) => setMatchPlayer4(e.target.value)}
+                      required
+                    >
+                      <option value="" disabled>Pilih Pemain</option>
+                      {players.map((p: any) => (
+                        <option key={p.player.id} value={p.player.id}>{p.player.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
               <Button type="submit" className="w-full" disabled={savingMatchPlayers}>
                 {savingMatchPlayers ? 'Menyimpan...' : 'Simpan Perubahan'}

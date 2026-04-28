@@ -69,7 +69,7 @@ export function MatchCard({ match }: MatchCardProps) {
             <Avatar className="w-12 h-12 mb-2 rounded-lg">
               <AvatarImage 
                 src={match.match_type === 'individual' ? (match.team1_player1?.avatar_url || '') : (match.team1?.logo_url || '')} 
-                alt={match.match_type === 'individual' ? `${match.team1_player1?.name} & ${match.team1_player2?.name}` : match.team1?.name} 
+                alt={match.match_type === 'individual' ? `${match.team1_player1?.name} - ${match.team1_player2?.name}` : match.team1?.name} 
                 className="object-cover" 
               />
               <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-lg">
@@ -86,7 +86,7 @@ export function MatchCard({ match }: MatchCardProps) {
                 ? (
                   <span className="flex flex-col">
                     <span>{match.team1_player1?.name}</span>
-                    {match.team1_player2?.name && <span>& {match.team1_player2?.name}</span>}
+                    {match.team1_player2?.name && <span> - {match.team1_player2?.name}</span>}
                   </span>
                 )
                 : match.team1?.name}
@@ -139,7 +139,7 @@ export function MatchCard({ match }: MatchCardProps) {
             <Avatar className="w-12 h-12 mb-2 rounded-lg">
               <AvatarImage 
                 src={match.match_type === 'individual' ? (match.team2_player1?.avatar_url || '') : (match.team2?.logo_url || '')} 
-                alt={match.match_type === 'individual' ? `${match.team2_player1?.name} & ${match.team2_player2?.name}` : match.team2?.name} 
+                alt={match.match_type === 'individual' ? `${match.team2_player1?.name} - ${match.team2_player2?.name}` : match.team2?.name} 
                 className="object-cover" 
               />
               <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-lg">
@@ -156,7 +156,7 @@ export function MatchCard({ match }: MatchCardProps) {
                 ? (
                   <span className="flex flex-col">
                     <span>{match.team2_player1?.name}</span>
-                    {match.team2_player2?.name && <span>& {match.team2_player2?.name}</span>}
+                    {match.team2_player2?.name && <span>- {match.team2_player2?.name}</span>}
                   </span>
                 )
                 : match.team2?.name}

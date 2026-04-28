@@ -78,7 +78,7 @@ export function TournamentStandings() {
                   <TableHeader>
                     <TableRow className="border-slate-700 hover:bg-slate-800/50">
                       <TableHead className="w-12 text-slate-400">#</TableHead>
-                      <TableHead className="text-slate-400">Player</TableHead>
+                      <TableHead className="text-slate-400">{(['knockout', 'team_americano', 'team_mexicano', 'group_stage'].includes(tournament.format)) ? 'Team' : 'Player'}</TableHead>
                       <TableHead className="text-right text-slate-400" title="Games Played">G</TableHead>
                       <TableHead className="text-center text-slate-400" title="Win-Loss-Tie">W-L-T</TableHead>
                       <TableHead className="text-right text-slate-400" title="Point Difference">DIFF</TableHead>

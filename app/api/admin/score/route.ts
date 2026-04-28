@@ -48,9 +48,7 @@ export async function POST(request: NextRequest) {
     const scores = await getMatchScores(matchId);
     const matchState = calculateMatchState(scores, tournamentConfig);
 
-    // If match is not yet marked as live, update status
-    await updateMatchStatus(matchId, 'live');
-
+    // Update match status based on state
     if (matchState.matchComplete && matchState.winner) {
       const { data: match } = await supabaseServer.from('matches').select('*').eq('id', matchId).single();
       
@@ -110,14 +108,24 @@ export async function POST(request: NextRequest) {
           await advanceKnockoutWinner(matchId, winnerId);
         }
       }
+    } else {
+      // Only set to live if not yet completed and not finishing now
+      const { data: currentMatch } = await supabaseServer.from('matches').select('status').eq('id', matchId).single();
+      if (currentMatch && currentMatch.status !== 'completed') {
+        await updateMatchStatus(matchId, 'live');
+      }
     }
 
     // TODO: Broadcast via Socket.io to connected clients
     // io.to(`match:${matchId}`).emit('score-updated', { matchId, ...matchState });
 
+    // Fetch updated match to get latest status
+    const { data: updatedMatch } = await supabaseServer.from('matches').select('*').eq('id', matchId).single();
+
     return NextResponse.json({
       score,
       matchState,
+      match: updatedMatch,
     });
   } catch (error) {
     console.error('Error updating score:', error);

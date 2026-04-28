@@ -168,6 +168,21 @@ export default function AdminTournamentsPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus turnamen ini? Semua data terkait akan dihapus secara permanen.')) return;
+    
+    try {
+      const res = await fetch(`/api/admin/tournaments/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        await fetchTournaments();
+      }
+    } catch (error) {
+      console.error('Failed to delete tournament', error);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center">
@@ -445,10 +460,10 @@ export default function AdminTournamentsPage() {
                     <div>
                       <div className="flex items-center justify-between mb-4">
                         <Label className="text-base">
-                          {format === 'knockout' ? 'Teams' : 'Players'} ({players.filter(p => p.trim() !== '').length})
+                          {(format === 'knockout' || format === 'team_americano' || format === 'team_mexicano') ? 'Teams' : 'Players'} ({players.filter(p => p.trim() !== '').length})
                         </Label>
                         <Button type="button" variant="outline" size="sm" onClick={handleAddPlayerInput}>
-                          <Plus className="w-4 h-4 mr-2" /> Add {format === 'knockout' ? 'Team' : 'Player'} Slot
+                          <Plus className="w-4 h-4 mr-2" /> Add {(format === 'knockout' || format === 'team_americano' || format === 'team_mexicano') ? 'Team' : 'Player'} Slot
                         </Button>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -457,7 +472,7 @@ export default function AdminTournamentsPage() {
                             <Input 
                               value={playerName} 
                               onChange={(e) => handlePlayerNameChange(index, e.target.value)} 
-                              placeholder={`${format === 'knockout' ? 'Team' : 'Player'} ${index + 1}`} 
+                              placeholder={`${(format === 'knockout' || format === 'team_americano' || format === 'team_mexicano') ? 'Team' : 'Player'} ${index + 1}`} 
                             />
                             <Button 
                               type="button" 
@@ -501,34 +516,50 @@ export default function AdminTournamentsPage() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tournaments.map((tournament) => (
-              <Link key={tournament.id} href={`/admin/tournaments/${tournament.id}`}>
-                <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
-                  <CardHeader>
-                    <div className="flex justify-between items-start gap-2">
-                      <div>
-                        <CardTitle className="text-xl line-clamp-1">{tournament.name}</CardTitle>
-                        <CardDescription className="capitalize">
-                          {tournament.format?.replace('_', ' ')}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        tournament.status === 'draft' ? 'bg-secondary text-secondary-foreground' :
-                        tournament.status === 'ongoing' ? 'bg-primary/20 text-primary' :
-                        'bg-muted text-muted-foreground'
-                      }`}>
-                        {tournament.status.toUpperCase()}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(tournament.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                <div key={tournament.id} className="relative group">
+                  <Link href={`/admin/tournaments/${tournament.id}`}>
+                    <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
+                      <CardHeader>
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <CardTitle className="text-xl line-clamp-1">{tournament.name}</CardTitle>
+                            <CardDescription className="capitalize">
+                              {tournament.format?.replace('_', ' ')}
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            tournament.status === 'draft' ? 'bg-secondary text-secondary-foreground' :
+                            tournament.status === 'ongoing' ? 'bg-primary/20 text-primary' :
+                            'bg-muted text-muted-foreground'
+                          }`}>
+                            {tournament.status.toUpperCase()}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(tournament.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                  {tournament.status === 'completed' && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute top-2 right-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDelete(tournament.id);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
             ))}
           </div>
         )}

@@ -1,11 +1,18 @@
+-- MASTER SCHEMA FOR PADEL LIVESCORE APP
+-- This script consolidates all migrations and removes unused tables like tournament_teams.
+
 -- Drop existing tables if they exist (for clean migration)
 DROP TABLE IF EXISTS match_scores CASCADE;
 DROP TABLE IF EXISTS matches CASCADE;
 DROP TABLE IF EXISTS standings CASCADE;
+DROP TABLE IF EXISTS tournament_players CASCADE;
+DROP TABLE IF EXISTS tournament_teams CASCADE;
+DROP TABLE IF EXISTS tournaments CASCADE;
 DROP TABLE IF EXISTS teams CASCADE;
+DROP TABLE IF EXISTS players CASCADE;
 DROP TABLE IF EXISTS admin_users CASCADE;
 
--- Create teams table
+-- 1. Create teams table (for standard 2v2 team-based matches)
 CREATE TABLE teams (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL UNIQUE,
@@ -13,20 +20,72 @@ CREATE TABLE teams (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create matches table
-CREATE TABLE matches (
+-- 2. Create players table (for Americano/Mexicano and tournament participants)
+CREATE TABLE players (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  team1_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
-  team2_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
-  scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  status VARCHAR(50) DEFAULT 'scheduled', -- scheduled, live, completed
-  winner_id UUID REFERENCES teams(id) ON DELETE SET NULL,
+  name VARCHAR(255) NOT NULL,
+  avatar_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 3. Create tournaments table
+CREATE TABLE tournaments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  format VARCHAR(100) NOT NULL, -- Americano, Mexicano, Knockout, Group Stage, etc.
+  status VARCHAR(50) DEFAULT 'draft', -- draft, ongoing, completed
+  game_type VARCHAR(50) DEFAULT 'tournament', -- tournament or mabar
+  tournament_date DATE,
+  number_of_courts INT DEFAULT 1,
+  scoring_type VARCHAR(50) DEFAULT 'normal', -- point or normal
+  point_per_match INT,
+  normal_scoring_rule VARCHAR(50), -- first_to_4, best_of_3, etc.
+  knockout_setting INT, -- 4, 8, 16, 32
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create match_scores table for detailed scoring
--- Format: Best of 3 sets, each set 6 games, 2-point margin
+-- 4. Create tournament_players table (enrollment and standings for tournaments)
+CREATE TABLE tournament_players (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+  player_id UUID NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  group_name VARCHAR(255), -- For Group Stage
+  points INT DEFAULT 0,
+  matches_played INT DEFAULT 0,
+  matches_won INT DEFAULT 0,
+  matches_lost INT DEFAULT 0,
+  games_won INT DEFAULT 0,
+  games_lost INT DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(tournament_id, player_id)
+);
+
+-- 5. Create matches table
+CREATE TABLE matches (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tournament_id UUID REFERENCES tournaments(id) ON DELETE CASCADE,
+  round_number INT,
+  match_type VARCHAR(50) DEFAULT 'team', -- 'team' or 'individual'
+  
+  -- For team-based matches (Liga/Direct Match)
+  team1_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+  team2_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+  
+  -- For individual-based matches (Americano/Mexicano/Knockout)
+  team1_player1_id UUID REFERENCES players(id) ON DELETE CASCADE,
+  team1_player2_id UUID REFERENCES players(id) ON DELETE CASCADE,
+  team2_player1_id UUID REFERENCES players(id) ON DELETE CASCADE,
+  team2_player2_id UUID REFERENCES players(id) ON DELETE CASCADE,
+  
+  scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  status VARCHAR(50) DEFAULT 'scheduled', -- scheduled, live, completed
+  winner_id UUID, -- Can be Team ID or Player ID (for Individual 1v1)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 6. Create match_scores table for detailed scoring
 CREATE TABLE match_scores (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   match_id UUID NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
@@ -39,7 +98,7 @@ CREATE TABLE match_scores (
   UNIQUE(match_id, set_number, game_number)
 );
 
--- Create standings table for leaderboard
+-- 7. Create standings table for Global Team rankings
 CREATE TABLE standings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   team_id UUID NOT NULL UNIQUE REFERENCES teams(id) ON DELETE CASCADE,
@@ -54,7 +113,7 @@ CREATE TABLE standings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create admin_users table with hashed passwords
+-- 8. Create admin_users table
 CREATE TABLE admin_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   username VARCHAR(255) NOT NULL UNIQUE,
@@ -63,41 +122,14 @@ CREATE TABLE admin_users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes for better query performance
-CREATE INDEX idx_matches_team1_id ON matches(team1_id);
-CREATE INDEX idx_matches_team2_id ON matches(team2_id);
+-- Indexes for performance
+CREATE INDEX idx_matches_tournament_id ON matches(tournament_id);
 CREATE INDEX idx_matches_scheduled_at ON matches(scheduled_at);
 CREATE INDEX idx_matches_status ON matches(status);
 CREATE INDEX idx_match_scores_match_id ON match_scores(match_id);
-CREATE INDEX idx_standings_team_id ON standings(team_id);
+CREATE INDEX idx_tp_tournament_id ON tournament_players(tournament_id);
+CREATE INDEX idx_tp_player_id ON tournament_players(player_id);
 
--- Insert sample data for testing
-INSERT INTO teams (name, logo_url) VALUES
-  ('Team A', 'https://via.placeholder.com/100?text=Team+A'),
-  ('Team B', 'https://via.placeholder.com/100?text=Team+B'),
-  ('Team C', 'https://via.placeholder.com/100?text=Team+C'),
-  ('Team D', 'https://via.placeholder.com/100?text=Team+D');
-
--- Insert sample matches
-INSERT INTO matches (team1_id, team2_id, scheduled_at, status) 
-SELECT 
-  (SELECT id FROM teams WHERE name = 'Team A'),
-  (SELECT id FROM teams WHERE name = 'Team B'),
-  NOW() + INTERVAL '2 hours'::interval,
-  'scheduled'
-UNION ALL
-SELECT 
-  (SELECT id FROM teams WHERE name = 'Team C'),
-  (SELECT id FROM teams WHERE name = 'Team D'),
-  NOW() + INTERVAL '4 hours'::interval,
-  'scheduled'
-UNION ALL
-SELECT 
-  (SELECT id FROM teams WHERE name = 'Team A'),
-  (SELECT id FROM teams WHERE name = 'Team C'),
-  NOW() - INTERVAL '1 hours'::interval,
-  'live';
-
--- Insert standings for each team
-INSERT INTO standings (team_id, matches_played, matches_won, matches_lost, games_won, games_lost, sets_won, sets_lost)
-SELECT id, 0, 0, 0, 0, 0, 0, 0 FROM teams;
+-- Sample Data (Optional)
+INSERT INTO admin_users (username, password_hash) VALUES 
+('admin', '$2b$10$YourHashedPasswordHere'); -- Note: Replace with actual hash if needed

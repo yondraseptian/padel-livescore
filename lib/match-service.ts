@@ -243,7 +243,7 @@ export function calculateMatchState(scores: MatchScore[], config?: TournamentCon
     team1Sets: team1SetsWon,
     team2Sets: team2SetsWon,
     currentSet: sets[activeSetNum],
-    allSets: [sets[1], sets[2], sets[3]].filter(s => s.team1Games > 0 || s.team2Games > 0 || s === sets[activeSetNum]),
+    allSets: [sets[1], sets[2], sets[3]].filter(s => s.team1Games > 0 || s.team2Games > 0 || (!matchComplete && s === sets[activeSetNum])),
     matchComplete,
     winner: matchWinner,
     isPointScoring: false,
