@@ -1,13 +1,5 @@
 'use client';
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { Trophy, Medal, Star, TrendingUp, Users } from 'lucide-react';
@@ -62,7 +54,7 @@ export function GlobalStandings() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-        <div className="w-8 h-8 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mb-4" />
+        <div className="w-8 h-8 border-4 border-[#48c4c4]/30 border-t-[#48c4c4] rounded-full animate-spin mb-4" />
         <p>Memuat klasemen global...</p>
       </div>
     );
@@ -83,11 +75,11 @@ export function GlobalStandings() {
         {standings.slice(0, 3).map((player, index) => (
           <div 
             key={player.id} 
-            onClick={() => handlePlayerClick(player)}
-            className={`relative overflow-hidden rounded-2xl p-6 border cursor-pointer transform transition-all hover:scale-[1.02] active:scale-95 ${
-              index === 0 ? 'bg-gradient-to-br from-amber-500/20 to-amber-900/40 border-amber-500/50' :
-              index === 1 ? 'bg-gradient-to-br from-slate-400/20 to-slate-600/40 border-slate-400/50' :
-              'bg-gradient-to-br from-orange-600/20 to-orange-900/40 border-orange-600/50'
+            onClick={() => handlePlayerClick(player, index + 1)}
+            className={`relative overflow-hidden rounded-2xl p-4 sm:p-6 border cursor-pointer transform transition-all hover:scale-[1.02] active:scale-95 ${
+              index === 0 ? 'bg-gradient-to-br from-[#48c4c4]/20 to-[#48c4c4]/5 border-[#48c4c4]/50' :
+              index === 1 ? 'bg-gradient-to-br from-[#282c90]/40 to-[#1a1e6e]/60 border-[#48c4c4]/20' :
+              'bg-gradient-to-br from-[#282c90]/20 to-[#48c4c4]/10 border-[#282c90]/40'
             }`}
           >
             <div className="relative z-10 flex items-center gap-4">
@@ -100,9 +92,9 @@ export function GlobalStandings() {
                   </div>
                 )}
                 <div className={`absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-lg ${
-                  index === 0 ? 'bg-amber-500 text-white' :
-                  index === 1 ? 'bg-slate-300 text-slate-900' :
-                  'bg-orange-500 text-white'
+                  index === 0 ? 'bg-[#48c4c4] text-[#282c90]' :
+                  index === 1 ? 'bg-[#282c90] text-[#48c4c4]' :
+                  'bg-[#1a1e6e] text-[#48c4c4]'
                 }`}>
                   {index === 0 ? <Trophy className="w-4 h-4" /> : index + 1}
                 </div>
@@ -116,18 +108,18 @@ export function GlobalStandings() {
             </div>
             {/* Background Icon */}
             <Trophy className={`absolute -bottom-4 -right-4 w-24 h-24 opacity-10 ${
-              index === 0 ? 'text-amber-500' : index === 1 ? 'text-slate-300' : 'text-orange-500'
+              index === 0 ? 'text-[#48c4c4]' : index === 1 ? 'text-[#fefefe]' : 'text-[#48c4c4]'
             }`} />
           </div>
         ))}
       </div>
 
-      <Card className="bg-slate-900/50 border-slate-800 overflow-hidden backdrop-blur-sm">
-        <CardHeader className="border-b border-slate-800 pb-4">
+      <Card className="bg-[#1a1e6e]/80 border-[#282c90] overflow-hidden backdrop-blur-sm">
+        <CardHeader className="border-b border-[#282c90] pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-xl text-white flex items-center gap-2">
-                <Star className="w-5 h-5 text-amber-500" />
+              <CardTitle className="text-xl text-[#fefefe] flex items-center gap-2">
+                <Star className="w-5 h-5 text-[#48c4c4]" />
                 Leaderboard Global
               </CardTitle>
               <CardDescription className="text-slate-400">
@@ -135,108 +127,83 @@ export function GlobalStandings() {
               </CardDescription>
             </div>
             <div className="hidden sm:flex items-center gap-4">
-              <div className="text-center px-4 py-1 rounded-full bg-slate-800 border border-slate-700">
-                <p className="text-[10px] uppercase text-slate-500 font-bold">Total Players</p>
-                <p className="text-sm font-bold text-white">{standings.length}</p>
+              <div className="text-center px-4 py-1 rounded-full bg-[#282c90] border border-[#48c4c4]/30">
+                <p className="text-[10px] uppercase text-[#48c4c4]/60 font-bold">Total Players</p>
+                <p className="text-sm font-bold text-[#fefefe]">{standings.length}</p>
               </div>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-slate-800 hover:bg-transparent">
-                  <TableHead className="w-16 text-center text-slate-500 uppercase text-[10px] font-bold">Rank</TableHead>
-                  <TableHead className="text-slate-500 uppercase text-[10px] font-bold">Pemain</TableHead>
-                  <TableHead className="text-center text-slate-500 uppercase text-[10px] font-bold">Turnamen</TableHead>
-                  <TableHead className="text-center text-slate-500 uppercase text-[10px] font-bold">W-L</TableHead>
-                  <TableHead className="text-center text-slate-500 uppercase text-[10px] font-bold">Diff</TableHead>
-                  <TableHead className="text-right text-amber-500 uppercase text-[10px] font-bold">Total Poin</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {standings.map((player, index) => (
-                  <TableRow key={player.id} className="border-slate-800/50 hover:bg-slate-800/30 transition-colors group">
-                    <TableCell className="text-center">
-                      <span className={`inline-flex w-8 h-8 items-center justify-center rounded-full font-bold text-sm ${
-                        index === 0 ? 'bg-amber-500/20 text-amber-500' :
-                        index === 1 ? 'bg-slate-400/20 text-slate-300' :
-                        index === 2 ? 'bg-orange-500/20 text-orange-500' :
-                        'text-slate-500'
-                      }`}>
-                        {index + 1}
+          {/* Mobile Card List */}
+          <div className="divide-y divide-[#282c90]/60">
+            {standings.map((player, index) => {
+              const diff = player.total_games_won - player.total_games_lost;
+              const winRate = player.total_matches_played
+                ? Math.round((player.total_matches_won / player.total_matches_played) * 100)
+                : 0;
+              return (
+                <div
+                  key={player.id}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-[#282c90]/40 transition-colors cursor-pointer active:bg-[#282c90]/60"
+                  onClick={() => handlePlayerClick(player, index + 1)}
+                >
+                  {/* Rank */}
+                  <span className={`flex-shrink-0 inline-flex w-8 h-8 items-center justify-center rounded-full font-bold text-sm ${
+                    index === 0 ? 'bg-[#48c4c4]/20 text-[#48c4c4]' :
+                    index === 1 ? 'bg-[#fefefe]/10 text-[#fefefe]/70' :
+                    index === 2 ? 'bg-[#282c90]/40 text-[#48c4c4]/80' :
+                    'text-slate-500'
+                  }`}>
+                    {index + 1}
+                  </span>
+
+                  {/* Avatar */}
+                  <div className="relative flex-shrink-0">
+                    {player.avatar_url ? (
+                      <img src={player.avatar_url} alt={player.name} className="w-10 h-10 rounded-full object-cover border border-[#282c90]" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-[#282c90] border border-[#48c4c4]/20 flex items-center justify-center font-bold text-[#48c4c4]">
+                        {player.name.charAt(0)}
+                      </div>
+                    )}
+                    {index < 3 && (
+                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#1a1e6e] ${
+                        index === 0 ? 'bg-[#48c4c4]' : index === 1 ? 'bg-[#fefefe]' : 'bg-[#282c90]'
+                      }`} />
+                    )}
+                  </div>
+
+                  {/* Name + ID */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-[#fefefe] text-sm truncate">{player.name}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="text-[10px] text-[#fefefe]/40">
+                        <span className="text-green-400 font-bold">{player.total_matches_won}W</span>
+                        <span className="text-[#fefefe]/20 mx-0.5">/</span>
+                        <span className="text-red-400 font-bold">{player.total_matches_lost}L</span>
                       </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          {player.avatar_url ? (
-                            <img src={player.avatar_url} alt={player.name} className="w-10 h-10 rounded-full object-cover border border-slate-700" />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-400">
-                              {player.name.charAt(0)}
-                            </div>
-                          )}
-                          {index < 3 && (
-                            <div className="absolute -bottom-1 -right-1">
-                              <div className={`w-4 h-4 rounded-full border-2 border-slate-900 ${
-                                index === 0 ? 'bg-amber-500' :
-                                index === 1 ? 'bg-slate-300' :
-                                'bg-orange-500'
-                              }`} />
-                            </div>
-                          )}
-                        </div>
-                        <div 
-                          className="cursor-pointer group/name"
-                          onClick={() => handlePlayerClick(player, index + 1)}
-                        >
-                          <p className="font-bold text-white group-hover/name:text-amber-500 transition-colors">{player.name}</p>
-                          <p className="text-[10px] text-slate-500 font-medium">ID: {player.id.slice(0, 8)}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center font-medium text-slate-300">
-                      {player.tournaments_played}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex flex-col items-center">
-                        <span className="text-xs font-bold text-slate-300">
-                          <span className="text-green-500">{player.total_matches_won}</span>
-                          <span className="mx-1">/</span>
-                          <span className="text-red-500">{player.total_matches_lost}</span>
-                        </span>
-                        <div className="w-12 h-1 bg-slate-800 rounded-full mt-1 overflow-hidden">
-                          <div 
-                            className="h-full bg-green-500" 
-                            style={{ width: `${(player.total_matches_won / (player.total_matches_played || 1)) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className={`font-mono text-xs ${
-                        (player.total_games_won - player.total_games_lost) > 0 ? 'text-green-400' :
-                        (player.total_games_won - player.total_games_lost) < 0 ? 'text-red-400' :
-                        'text-slate-500'
+                      <span className="text-[#282c90]/60">•</span>
+                      <span className={`text-[10px] font-mono font-bold ${
+                        diff > 0 ? 'text-green-400' : diff < 0 ? 'text-red-400' : 'text-[#fefefe]/30'
                       }`}>
-                        {(player.total_games_won - player.total_games_lost) > 0 ? '+' : ''}
-                        {player.total_games_won - player.total_games_lost}
+                        {diff > 0 ? '+' : ''}{diff}
                       </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex flex-col items-end">
-                        <span className="text-lg font-black text-amber-500 italic tabular-nums">
-                          {player.total_points}
-                        </span>
-                        <span className="text-[9px] uppercase text-slate-600 font-bold">Total Poin</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      <span className="text-[#282c90]/60">•</span>
+                      <span className="text-[10px] text-[#fefefe]/30">{player.tournaments_played} trn</span>
+                    </div>
+                  </div>
+
+                  {/* Points */}
+                  <div className="flex-shrink-0 text-right">
+                    <span className="text-lg font-black text-[#48c4c4] italic tabular-nums leading-none">
+                      {player.total_points}
+                    </span>
+                    <p className="text-[9px] uppercase text-[#48c4c4]/40 font-bold">Poin</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

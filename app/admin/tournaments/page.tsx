@@ -185,8 +185,8 @@ export default function AdminTournamentsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="min-h-screen bg-[#fefefe] flex items-center justify-center">
+        <p className="text-[#282c90]/50">Loading...</p>
       </div>
     );
   }
@@ -194,22 +194,22 @@ export default function AdminTournamentsPage() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="min-h-screen bg-[#fefefe]">
+      <header className="sticky top-0 z-50 border-b border-[#48c4c4]/20 bg-[#fefefe]/95 backdrop-blur supports-[backdrop-filter]:bg-[#fefefe]/90">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Activity className="w-6 h-6 text-primary shrink-0" />
-            <span className="font-bold hidden sm:inline">Padel LiveScore</span>
+            <Activity className="w-6 h-6 text-[#48c4c4] shrink-0" />
+            <span className="font-bold hidden sm:inline text-[#282c90]">Padel LiveScore</span>
           </Link>
           <div className="flex items-center gap-3 sm:gap-4">
-            <Link href="/admin/dashboard" className="text-xs sm:text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/admin/dashboard" className="text-xs sm:text-sm font-medium text-[#282c90]/50 hover:text-[#282c90] transition-colors">
               Matches
             </Link>
-            <span className="text-xs sm:text-sm text-primary font-medium">Tournaments</span>
-            <Link href="/admin/players" className="text-xs sm:text-sm font-medium hover:text-primary transition-colors">
+            <span className="text-xs sm:text-sm text-[#48c4c4] font-bold underline underline-offset-4">Tournaments</span>
+            <Link href="/admin/players" className="text-xs sm:text-sm font-medium text-[#282c90]/50 hover:text-[#282c90] transition-colors">
               Players
             </Link>
-            <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2 ml-2 sm:ml-4 px-2 sm:px-3">
+            <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2 ml-2 sm:ml-4 px-2 sm:px-3 border-[#48c4c4]/30 text-[#282c90] hover:bg-[#48c4c4]/10">
               <LogOut className="w-4 h-4 shrink-0" />
               <span className="hidden sm:inline">Logout</span>
             </Button>
@@ -220,8 +220,8 @@ export default function AdminTournamentsPage() {
       <main className="max-w-6xl mx-auto px-4 py-12">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Tournaments & Mabar</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold text-[#282c90] mb-2">Tournaments & Mabar</h1>
+            <p className="text-[#282c90]/50">
               Manage your padel tournaments and matches
             </p>
           </div>
@@ -521,12 +521,12 @@ export default function AdminTournamentsPage() {
             {tournaments.map((tournament) => (
                 <div key={tournament.id} className="relative group">
                   <Link href={`/admin/tournaments/${tournament.id}`}>
-                    <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
+            <Card className="hover:border-[#48c4c4]/50 transition-colors cursor-pointer h-full bg-white border-[#48c4c4]/20 shadow-sm">
                       <CardHeader>
                         <div className="flex justify-between items-start gap-2">
                           <div>
-                            <CardTitle className="text-xl line-clamp-1">{tournament.name}</CardTitle>
-                            <CardDescription className="capitalize">
+                            <CardTitle className="text-xl line-clamp-1 text-[#282c90]">{tournament.name}</CardTitle>
+                            <CardDescription className="capitalize text-[#282c90]/40">
                               {tournament.format?.replace('_', ' ')}
                             </CardDescription>
                           </div>
@@ -535,13 +535,13 @@ export default function AdminTournamentsPage() {
                       <CardContent>
                         <div className="flex items-center justify-between mt-2">
                           <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            tournament.status === 'draft' ? 'bg-secondary text-secondary-foreground' :
-                            tournament.status === 'ongoing' ? 'bg-primary/20 text-primary' :
-                            'bg-muted text-muted-foreground'
+                            tournament.status === 'draft' ? 'bg-[#282c90]/10 text-[#282c90]' :
+                            tournament.status === 'ongoing' ? 'bg-[#48c4c4]/20 text-[#48c4c4]' :
+                            'bg-[#282c90]/5 text-[#282c90]/40'
                           }`}>
                             {tournament.status.toUpperCase()}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-[#282c90]/40">
                             {new Date(tournament.created_at).toLocaleDateString()}
                           </span>
                         </div>
