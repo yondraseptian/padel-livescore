@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Settings, Trophy, Edit2 } from 'lucide-react';
 import type { Match } from '@/lib/db';
 
 interface ScoreInputProps {
@@ -50,6 +50,20 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isEditingScore, setIsEditingScore] = useState(false);
+  const [editT1Games, setEditT1Games] = useState(0);
+  const [editT2Games, setEditT2Games] = useState(0);
+  const [editT1Points, setEditT1Points] = useState(0);
+  const [editT2Points, setEditT2Points] = useState(0);
+
+  useEffect(() => {
+    if (matchState) {
+      setEditT1Games(matchState.currentSet.team1Games);
+      setEditT2Games(matchState.currentSet.team2Games);
+      setEditT1Points(matchState.currentGame.team1Points);
+      setEditT2Points(matchState.currentGame.team2Points);
+    }
+  }, [matchState?.currentSet.team1Games, matchState?.currentSet.team2Games, matchState?.currentGame.team1Points, matchState?.currentGame.team2Points]);
 
   useEffect(() => {
     const fetchScore = async () => {
@@ -126,6 +140,56 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
     }
   };
 
+  const directWin = async (winner: 'team1' | 'team2') => {
+    if (!matchState || !confirm(`Mark ${winner === 'team1' ? 'Team 1' : 'Team 2'} as direct winner?`)) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/score/direct-win', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchId: match.id, winner }),
+      });
+      const data = await res.json();
+      if (data.matchState) {
+        setMatchState(data.matchState);
+        setSuccess('Match completed successfully');
+        onScoreUpdate?.();
+      }
+    } catch (err) {
+      setError('Failed to process direct win');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleManualScoreUpdate = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/score/manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          matchId: match.id,
+          team1Games: editT1Games,
+          team2Games: editT2Games,
+          team1Points: editT1Points,
+          team2Points: editT2Points,
+        }),
+      });
+      const data = await res.json();
+      if (data.matchState) {
+        setMatchState(data.matchState);
+        setIsEditingScore(false);
+        setSuccess('Scores updated manually');
+        onScoreUpdate?.();
+      }
+    } catch (err) {
+      setError('Failed to update scores manually');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const resetMatch = async () => {
     setSaving(true);
     setError('');
@@ -182,20 +246,30 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          {match.match_type === 'individual' ? (
-            <>
-              {match.team1_player1?.name}{match.team1_player2?.name ? ` & ${match.team1_player2.name}` : ''}
-              <span className="mx-2 text-muted-foreground font-normal">vs</span>
-              {match.team2_player1?.name}{match.team2_player2?.name ? ` & ${match.team2_player2.name}` : ''}
-            </>
-          ) : (
-            `${match.team1?.name} vs ${match.team2?.name}`
+        <div className="flex items-center justify-between">
+          <CardTitle>
+            {match.match_type === 'individual' ? (
+              <>
+                {match.team1_player1?.name}{match.team1_player2?.name ? ` - ${match.team1_player2.name}` : ''}
+                <span className="mx-2 text-muted-foreground font-normal">vs</span>
+                {match.team2_player1?.name}{match.team2_player2?.name ? ` - ${match.team2_player2.name}` : ''}
+              </>
+            ) : (
+              `${match.team1?.name} vs ${match.team2?.name}`
+            )}
+          </CardTitle>
+          {match.tournament_id && (
+            <Button variant="ghost" size="sm" asChild>
+              <a href={`/admin/tournaments/${match.tournament_id}`}>
+                <Settings className="w-4 h-4 mr-2" />
+                Manage
+              </a>
+            </Button>
           )}
-        </CardTitle>
-        {!matchState.isPointScoring && (
+        </div>
+        {!matchState.matchComplete && (
           <CardDescription>
-           Current Sets: {currentGameNum}
+            {matchState.isPointScoring ? 'Point Scoring' : `Current Sets: ${currentGameNum}`}
           </CardDescription>
         )}
       </CardHeader>
@@ -222,7 +296,7 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
               <p className="text-3xl font-bold">{matchState.currentSet.team1Games}</p>
               <p className="text-sm text-muted-foreground">
                 {match.match_type === 'individual' 
-                  ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` & ${match.team1_player2.name}` : ''}` 
+                  ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` - ${match.team1_player2.name}` : ''}` 
                   : match.team1?.name}
               </p>
             </div>
@@ -231,7 +305,7 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
               <p className="text-3xl font-bold">{matchState.currentSet.team2Games}</p>
               <p className="text-sm text-muted-foreground">
                 {match.match_type === 'individual' 
-                  ? `${match.team2_player1?.name}${match.team2_player2?.name ? ` & ${match.team2_player2.name}` : ''}` 
+                  ? `${match.team2_player1?.name}${match.team2_player2?.name ? ` - ${match.team2_player2.name}` : ''}` 
                   : match.team2?.name}
               </p>
             </div>
@@ -242,88 +316,67 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
         <div className="border-t border-border pt-6">
           <p className="text-sm font-medium mb-4">Current Game Score</p>
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="text-center">
+            <div className="text-center space-y-4">
               <p className="text-sm text-muted-foreground mb-2">
                 {match.match_type === 'individual' 
-                  ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` & ${match.team1_player2.name}` : ''}` 
+                  ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` - ${match.team1_player2.name}` : ''}` 
                   : match.team1?.name}
               </p>
-              <p className="text-5xl font-bold mb-4 text-blue-600">
-                {matchState.isPointScoring ? matchState.currentGame.team1Points : getTennisScoreDisplay(matchState.currentGame.team1Points, matchState.currentGame.team2Points, matchState.currentSet.isTiebreaker)}
-              </p>
-              {/* <p className="text-xs text-muted-foreground">Games Won: {matchState.currentSet.team1Games}</p> */}
+              <div className="flex flex-col items-center gap-2">
+                <Button 
+                  size="lg" 
+                  className="w-full h-24 text-4xl font-bold rounded-2xl"
+                  onClick={() => updateScore(matchState.currentGame.team1Points + 1, matchState.currentGame.team2Points)}
+                  disabled={saving || matchState.matchComplete}
+                >
+                  {matchState.isPointScoring 
+                    ? matchState.currentGame.team1Points 
+                    : getTennisScoreDisplay(matchState.currentGame.team1Points, matchState.currentGame.team2Points, matchState.currentSet.isTiebreaker)}
+                </Button>
+                {!matchState.matchComplete && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-[10px] uppercase tracking-wider"
+                    onClick={() => directWin('team1')}
+                    disabled={saving}
+                  >
+                    <Trophy className="w-3 h-3 mr-1" /> Direct Win
+                  </Button>
+                )}
+              </div>
             </div>
-            <div className="text-center">
+            <div className="text-center space-y-4">
               <p className="text-sm text-muted-foreground mb-2">
                 {match.match_type === 'individual' 
-                  ? `${match.team2_player1?.name}${match.team2_player2?.name ? ` & ${match.team2_player2.name}` : ''}` 
+                  ? `${match.team2_player1?.name}${match.team2_player2?.name ? ` - ${match.team2_player2.name}` : ''}` 
                   : match.team2?.name}
               </p>
-              <p className="text-5xl font-bold mb-4 text-blue-600">
-                {matchState.isPointScoring ? matchState.currentGame.team2Points : getTennisScoreDisplay(matchState.currentGame.team2Points, matchState.currentGame.team1Points, matchState.currentSet.isTiebreaker)}
-              </p>
-              {/* <p className="text-xs text-muted-foreground">Games Won: {matchState.currentSet.team2Games}</p> */}
+              <div className="flex flex-col items-center gap-2">
+                <Button 
+                  size="lg" 
+                  className="w-full h-24 text-4xl font-bold rounded-2xl"
+                  onClick={() => updateScore(matchState.currentGame.team1Points, matchState.currentGame.team2Points + 1)}
+                  disabled={saving || matchState.matchComplete}
+                >
+                  {matchState.isPointScoring 
+                    ? matchState.currentGame.team2Points 
+                    : getTennisScoreDisplay(matchState.currentGame.team2Points, matchState.currentGame.team1Points, matchState.currentSet.isTiebreaker)}
+                </Button>
+                {!matchState.matchComplete && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-[10px] uppercase tracking-wider"
+                    onClick={() => directWin('team2')}
+                    disabled={saving}
+                  >
+                    <Trophy className="w-3 h-3 mr-1" /> Direct Win
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-
-          {/* Score Update Buttons */}
-          {!matchState.matchComplete && (
-            <div className="grid grid-cols-2 gap-4">
-              {/* Team 1 Buttons */}
-              <div className="space-y-2">
-                <Button
-                  onClick={() => {
-                    let nextTeam1 = matchState.currentGame.team1Points + 1;
-                    let nextTeam2 = matchState.currentGame.team2Points;
-                    
-                    // Handle AD dropping back to Deuce
-                    if (!matchState.isPointScoring && !matchState.currentSet.isTiebreaker && matchState.currentGame.team2Points > matchState.currentGame.team1Points && matchState.currentGame.team2Points >= 4) {
-                      nextTeam1 = 3;
-                      nextTeam2 = 3;
-                    }
-
-                    updateScore(nextTeam1, nextTeam2);
-                  }}
-                  disabled={saving || matchState.matchComplete}
-                  className="w-full py-6"
-                  variant="outline"
-                >
-                  +1 Point {matchState.isPointScoring || matchState.currentSet.isTiebreaker ? '' : `(Next: ${
-                    matchState.currentGame.team2Points > matchState.currentGame.team1Points && matchState.currentGame.team2Points >= 4 
-                    ? '40' 
-                    : getTennisScoreDisplay(matchState.currentGame.team1Points + 1, matchState.currentGame.team2Points, false)
-                  })`}
-                </Button>
-              </div>
-
-              {/* Team 2 Buttons */}
-              <div className="space-y-2">
-                <Button
-                  onClick={() => {
-                    let nextTeam1 = matchState.currentGame.team1Points;
-                    let nextTeam2 = matchState.currentGame.team2Points + 1;
-                    
-                    // Handle AD dropping back to Deuce
-                    if (!matchState.isPointScoring && !matchState.currentSet.isTiebreaker && matchState.currentGame.team1Points > matchState.currentGame.team2Points && matchState.currentGame.team1Points >= 4) {
-                      nextTeam1 = 3;
-                      nextTeam2 = 3;
-                    }
-
-                    updateScore(nextTeam1, nextTeam2);
-                  }}
-                  disabled={saving || matchState.matchComplete}
-                  className="w-full py-6"
-                  variant="outline"
-                >
-                  +1 Point {matchState.isPointScoring || matchState.currentSet.isTiebreaker ? '' : `(Next: ${
-                    matchState.currentGame.team1Points > matchState.currentGame.team2Points && matchState.currentGame.team1Points >= 4 
-                    ? '40' 
-                    : getTennisScoreDisplay(matchState.currentGame.team2Points + 1, matchState.currentGame.team1Points, false)
-                  })`}
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Match Status */}
@@ -334,17 +387,24 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
               <AlertDescription className="font-medium text-lg">
                 Match completed!{' '}
                 {matchState.winner === 'draw' ? (
-                  `It's a draw! (${matchState.currentGame.team1Points} - ${matchState.currentGame.team2Points})`
+                  `It's a draw! ${matchState.isPointScoring 
+                    ? `(${matchState.currentGame.team1Points} - ${matchState.currentGame.team2Points})` 
+                    : `(${matchState.allSets[0]?.team1Games || 0} - ${matchState.allSets[0]?.team2Games || 0})`}`
                 ) : (
                   <>
-                    {matchState.team1Sets > matchState.team2Sets || matchState.winner === 'team1'
+                    {(matchState.winner === 'team1' || (matchState.team1Sets > matchState.team2Sets))
                       ? (match.match_type === 'individual' 
                           ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` & ${match.team1_player2.name}` : ''}` 
                           : match.team1?.name)
                       : (match.match_type === 'individual' 
                           ? `${match.team2_player1?.name}${match.team2_player2?.name ? ` & ${match.team2_player2.name}` : ''}` 
                           : match.team2?.name)}{' '}
-                    wins {!matchState.isPointScoring ? `${matchState.team1Sets}-${matchState.team2Sets}` : `${Math.max(matchState.currentGame.team1Points, matchState.currentGame.team2Points)} - ${Math.min(matchState.currentGame.team1Points, matchState.currentGame.team2Points)}`}
+                    wins! Score: {' '}
+                    {matchState.isPointScoring 
+                      ? `${matchState.currentGame.team1Points} - ${matchState.currentGame.team2Points}`
+                      : (matchState.allSets.length === 1 
+                          ? `${matchState.allSets[0].team1Games} - ${matchState.allSets[0].team2Games}` 
+                          : `${matchState.team1Sets} - ${matchState.team2Sets}`)}
                   </>
                 )}
               </AlertDescription>
@@ -352,21 +412,76 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
           </div>
         )}
 
-        {/* Reset Button */}
-        <div className="border-t border-border pt-6">
-          <Button
-            variant="destructive"
-            className="w-full"
+        {/* Reset/Edit Section */}
+        <div className="flex gap-2 pt-4 border-t border-border">
+          <Button 
+            variant="outline" 
+            className="flex-1" 
+            onClick={resetMatch}
             disabled={saving}
-            onClick={() => {
-              if (confirm('Reset this match score? This cannot be undone.')) {
-                resetMatch();
-              }
-            }}
           >
             Reset Match
           </Button>
+          {!matchState.matchComplete && (
+            <Button 
+              variant="secondary" 
+              className="flex-1" 
+              onClick={() => setIsEditingScore(!isEditingScore)}
+              disabled={saving}
+            >
+              <Edit2 className="w-4 h-4 mr-2" />
+              Edit Game Count
+            </Button>
+          )}
         </div>
+
+        {isEditingScore && (
+          <div className="p-4 border rounded-lg bg-muted/30 space-y-4">
+            <h3 className="font-bold text-sm">Manual Score Override</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs">Team 1 Games</label>
+                <input 
+                  type="number" 
+                  className="w-full p-2 border rounded" 
+                  value={editT1Games} 
+                  onChange={e => setEditT1Games(parseInt(e.target.value) || 0)} 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs">Team 2 Games</label>
+                <input 
+                  type="number" 
+                  className="w-full p-2 border rounded" 
+                  value={editT2Games} 
+                  onChange={e => setEditT2Games(parseInt(e.target.value) || 0)} 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs">Team 1 Points (Tiebreaker/Point Scoring)</label>
+                <input 
+                  type="number" 
+                  className="w-full p-2 border rounded" 
+                  value={editT1Points} 
+                  onChange={e => setEditT1Points(parseInt(e.target.value) || 0)} 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs">Team 2 Points (Tiebreaker/Point Scoring)</label>
+                <input 
+                  type="number" 
+                  className="w-full p-2 border rounded" 
+                  value={editT2Points} 
+                  onChange={e => setEditT2Points(parseInt(e.target.value) || 0)} 
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" className="flex-1" onClick={handleManualScoreUpdate} disabled={saving}>Save Manual</Button>
+              <Button size="sm" variant="ghost" onClick={() => setIsEditingScore(false)}>Cancel</Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

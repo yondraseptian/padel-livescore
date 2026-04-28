@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScoreInput } from '@/components/score-input';
-import { AlertCircle, LogOut, Activity, Plus } from 'lucide-react';
+import { AlertCircle, LogOut, Activity, Plus, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useAdmin } from '@/hooks/use-admin';
 import type { Match, Team } from '@/lib/db';
@@ -49,7 +49,7 @@ export default function AdminDashboardPage() {
     const fetchData = async () => {
       try {
         const [matchesRes, teamsRes] = await Promise.all([
-          fetch('/api/matches'),
+          fetch('/api/matches', { cache: 'no-store' }),
           fetch('/api/admin/teams')
         ]);
         
@@ -83,7 +83,7 @@ export default function AdminDashboardPage() {
 
   const handleRefreshMatches = async () => {
     try {
-      const res = await fetch('/api/matches');
+      const res = await fetch('/api/matches', { cache: 'no-store' });
       const data = await res.json();
       setMatches(data);
     } catch (error) {
@@ -244,31 +244,114 @@ export default function AdminDashboardPage() {
                     {matches.length} match{matches.length !== 1 ? 'es' : ''} available
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  {matches.map((match) => (
-                    <button
-                      key={match.id}
-                      onClick={() => setSelectedMatch(match)}
-                      className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                        selectedMatch?.id === match.id
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'border-border hover:bg-muted'
-                      }`}
-                    >
-                      <div className="text-sm font-medium mb-1 text-balance">
-                        {match.match_type === 'individual' 
-                          ? `${match.team1_player1?.name} - ${match.team1_player2?.name} vs ${match.team2_player1?.name} - ${match.team2_player2?.name}`
-                          : `${match.team1?.name || 'Team 1'} vs ${match.team2?.name || 'Team 2'}`
-                        }
-                      </div>
-                      <div className="text-xs flex justify-between items-center mt-2 opacity-80">
-                        <span>{new Date(match.scheduled_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${match.status === 'live' ? 'bg-red-500 text-white' : match.status === 'completed' ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'}`}>
-                          {match.status}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
+                <CardContent className="space-y-6">
+                  {/* Live Matches */}
+                  {matches.filter(m => m.status === 'live').length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold uppercase text-red-500 flex items-center gap-1">
+                         <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span> Live Now
+                      </p>
+                      {matches.filter(m => m.status === 'live').map((match) => (
+                        <button
+                          key={match.id}
+                          onClick={() => setSelectedMatch(match)}
+                          className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                            selectedMatch?.id === match.id
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'border-border hover:bg-muted'
+                          }`}
+                        >
+                          <div className="text-sm font-medium mb-1 text-balance">
+                            {match.match_type === 'individual' 
+                              ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` - ${match.team1_player2.name}` : ''} vs ${match.team2_player1?.name}${match.team2_player2?.name ? ` - ${match.team2_player2.name}` : ''}`
+                              : `${match.team1?.name || 'Team 1'} vs ${match.team2?.name || 'Team 2'}`
+                            }
+                          </div>
+                          <div className="flex justify-between items-end">
+                            <div className="text-[10px] opacity-70">
+                              {new Date(match.scheduled_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            {match.tournament_id && (
+                              <Link 
+                                href={`/admin/tournaments/${match.tournament_id}`}
+                                className="p-1 hover:bg-black/10 rounded transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Settings className="w-3 h-3" />
+                              </Link>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Scheduled Matches */}
+                  {matches.filter(m => m.status === 'scheduled').length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold uppercase text-amber-500">Scheduled</p>
+                      {matches.filter(m => m.status === 'scheduled').map((match) => (
+                        <button
+                          key={match.id}
+                          onClick={() => setSelectedMatch(match)}
+                          className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                            selectedMatch?.id === match.id
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'border-border hover:bg-muted'
+                          }`}
+                        >
+                          <div className="text-sm font-medium mb-1 text-balance">
+                            {match.match_type === 'individual' 
+                              ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` - ${match.team1_player2.name}` : ''} vs ${match.team2_player1?.name}${match.team2_player2?.name ? ` - ${match.team2_player2.name}` : ''}`
+                              : `${match.team1?.name || 'Team 1'} vs ${match.team2?.name || 'Team 2'}`
+                            }
+                          </div>
+                          <div className="flex justify-between items-end">
+                            <div className="text-[10px] opacity-70">
+                              {new Date(match.scheduled_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            {match.tournament_id && (
+                              <Link 
+                                href={`/admin/tournaments/${match.tournament_id}`}
+                                className="p-1 hover:bg-black/10 rounded transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Settings className="w-3 h-3" />
+                              </Link>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Completed Matches */}
+                  {matches.filter(m => m.status === 'completed').length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold uppercase text-muted-foreground">Completed</p>
+                      {matches.filter(m => m.status === 'completed').map((match) => (
+                        <button
+                          key={match.id}
+                          onClick={() => setSelectedMatch(match)}
+                          className={`w-full text-left p-3 rounded-lg border opacity-60 transition-colors ${
+                            selectedMatch?.id === match.id
+                              ? 'bg-primary/20 text-foreground border-primary/50'
+                              : 'border-border hover:bg-muted'
+                          }`}
+                        >
+                          <div className="text-sm font-medium mb-1 text-balance">
+                            {match.match_type === 'individual' 
+                              ? `${match.team1_player1?.name}${match.team1_player2?.name ? ` - ${match.team1_player2.name}` : ''} vs ${match.team2_player1?.name}${match.team2_player2?.name ? ` - ${match.team2_player2.name}` : ''}`
+                              : `${match.team1?.name || 'Team 1'} vs ${match.team2?.name || 'Team 2'}`
+                            }
+                          </div>
+                          <div className="text-[10px] opacity-70">
+                            Completed
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

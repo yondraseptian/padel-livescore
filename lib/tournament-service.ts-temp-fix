@@ -1,0 +1,100 @@
+export async function generateMexicanoRound(tournamentId: string, roundNumber: number, scheduledAt?: string): Promise<Match[]> {
+  const { data: tpData, error: tpError } = await supabaseServer
+    .from('tournament_players')
+    .select('player_id, points')
+    .eq('tournament_id', tournamentId)
+    .order('points', { ascending: false });
+    
+  if (tpError) throw new Error(`Failed to fetch tournament players: ${tpError.message}`);
+  
+  let players: string[] = tpData.map(tp => tp.player_id);
+  if (players.length < 4 || players.length % 4 !== 0) {
+    throw new Error('Number of players must be a multiple of 4.');
+  }
+
+  // Round 1 is random
+  if (roundNumber === 1) {
+    players = shuffleArray(players);
+  } else {
+    // Shuffle within same point groups for variety
+    const groupedByPoints: Record<number, string[]> = {};
+    tpData.forEach(p => {
+      const pts = p.points || 0;
+      if (!groupedByPoints[pts]) groupedByPoints[pts] = [];
+      groupedByPoints[pts].push(p.player_id);
+    });
+
+    const sortedPoints = Object.keys(groupedByPoints).map(Number).sort((a, b) => b - a);
+    players = [];
+    sortedPoints.forEach(pts => {
+      players.push(...shuffleArray(groupedByPoints[pts]));
+    });
+  }
+
+  // Create a point map for quick lookup
+  const pointMap: Record<string, number> = {};
+  tpData.forEach(tp => {
+    pointMap[tp.player_id] = tp.points || 0;
+  });
+
+  const matchesToInsert: any[] = [];
+  for (let i = 0; i < players.length; i += 4) {
+    const p1 = players[i];
+    const p2 = players[i + 1];
+    const p3 = players[i + 2];
+    const p4 = players[i + 3];
+
+    const pts1 = pointMap[p1];
+    const pts2 = pointMap[p2];
+    const pts3 = pointMap[p3];
+    const pts4 = pointMap[p4];
+
+    // Evaluate two main Mexicano pairing options:
+    // Option A: (P1 + P4) vs (P2 + P3)
+    // Option B: (P1 + P3) vs (P2 + P4)
+    
+    const countPairsA = (pts1 === pts4 ? 1 : 0) + (pts2 === pts3 ? 1 : 0);
+    const countPairsB = (pts1 === pts3 ? 1 : 0) + (pts2 === pts4 ? 1 : 0);
+
+    let team1: string[] = [];
+    let team2: string[] = [];
+
+    // Pick the option with fewer same-point teammates
+    if (countPairsB < countPairsA) {
+      team1 = [p1, p3];
+      team2 = [p2, p4];
+    } else if (countPairsA < countPairsB) {
+      team1 = [p1, p4];
+      team2 = [p2, p3];
+    } else {
+      // If equal, prefer A (traditional) UNLESS pts2 === pts3, then try to break it
+      if (pts2 === pts3 && pts2 !== pts4) {
+        team1 = [p1, p3];
+        team2 = [p2, p4];
+      } else {
+        team1 = [p1, p4];
+        team2 = [p2, p3];
+      }
+    }
+
+    matchesToInsert.push({
+      tournament_id: tournamentId,
+      round_number: roundNumber,
+      match_type: 'individual',
+      team1_player1_id: team1[0],
+      team1_player2_id: team1[1],
+      team2_player1_id: team2[0],
+      team2_player2_id: team2[1],
+      scheduled_at: scheduledAt || new Date().toISOString(),
+      status: 'scheduled'
+    });
+  }
+
+  const { data, error } = await supabaseServer
+    .from('matches')
+    .insert(matchesToInsert)
+    .select();
+    
+  if (error) throw new Error(`Failed to create matches: ${error.message}`);
+  return data;
+}

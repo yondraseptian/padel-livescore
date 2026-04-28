@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/db';
 import { cookies } from 'next/headers';
+import { deleteTournament } from '@/lib/tournament-service';
 
 async function isAdmin(request: NextRequest): Promise<boolean> {
   const cookieStore = await cookies();
@@ -51,6 +52,21 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json(data);
   } catch (error: any) {
     console.error('Error updating tournament:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+    await deleteTournament(id);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error deleting tournament:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

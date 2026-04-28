@@ -69,40 +69,7 @@ export default function KlasemenPage() {
           <p className="text-slate-400">Lihat peringkat pemain dan statistik terkini</p>
         </div>
 
-        {/* Category Cards */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {categoryData.map((category, index) => {
-            const Icon = category.icon;
-            return (
-              <Card key={index} className="bg-slate-900 border-slate-700 hover:border-amber-500 transition-colors">
-                <CardHeader>
-                  <div className="flex items-center gap-3 mb-2">
-                    <Icon className="w-6 h-6 text-amber-500" />
-                    <CardTitle className="text-white">{category.title}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm text-slate-400 mb-1">Top Pemain</p>
-                      <p className="text-lg font-bold text-white">{category.topPlayer.name}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-700">
-                      <div>
-                        <p className="text-xs text-slate-400">Kemenangan</p>
-                        <p className="text-xl font-bold text-amber-500">{category.topPlayer.wins}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-400">Poin</p>
-                        <p className="text-xl font-bold text-amber-500">{category.topPlayer.points}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div> */}
+        
 
         {/* Standings Section */}
         {loading ? (
