@@ -122,14 +122,12 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true }: Pl
           <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center bg-slate-900/50">
             <div 
               ref={cardRef}
-              className={`relative w-[400px] shadow-2xl overflow-hidden transition-all duration-500 border-2 ${
-                activeTheme === 'transparent' ? 'aspect-[9/16] bg-transparent border-white/60 shadow-none rounded-none' : 'aspect-[1.1/1]'
-              } ${
-                activeTheme === 'dark' ? 'bg-slate-950 border-slate-800 rounded-[1.5rem]' :
-                activeTheme === 'light' ? 'bg-slate-100 border-slate-200 rounded-[1.5rem]' :
-                activeTheme === 'orange' ? 'bg-amber-600 border-amber-700 rounded-[1.5rem]' :
-                activeTheme === 'transparent' ? '' :
-                'bg-slate-900 border-slate-800 rounded-[1.5rem]'
+              className={`relative w-[400px] aspect-[1.1/1] rounded-[1.5rem] shadow-2xl overflow-hidden transition-all duration-500 border-2 ${
+                activeTheme === 'dark' ? 'bg-slate-950 border-slate-800' :
+                activeTheme === 'light' ? 'bg-slate-100 border-slate-200' :
+                activeTheme === 'orange' ? 'bg-amber-600 border-amber-700' :
+                activeTheme === 'transparent' ? 'bg-transparent border-none shadow-none' :
+                'bg-slate-900 border-slate-800'
               }`}
             >
               {/* Background Layer */}
@@ -150,119 +148,61 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true }: Pl
                 </div>
               )}
 
-              {/* Content Layout */}
-              <div className={`relative z-10 h-full w-full flex flex-col ${
-                activeTheme === 'transparent' ? 'justify-end drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] p-0' : 'p-6'
+              {/* Content Layout (Unified Compact Grid) */}
+              <div className={`relative z-10 h-full w-full flex flex-col p-6 ${
+                activeTheme === 'transparent' ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]' : ''
               }`}>
-                
-                {activeTheme === 'transparent' ? (
-                  /* THE INFO STRIP (Transparent Layout) - ABSOLUTE BOTTOM & FULL WIDTH */
-                  <>
-                    {/* Brand Logo (Top Left) */}
-                    <div className="absolute top-6 left-6">
-                      <img src="/logo/logo.PNG" alt="Logo" className="w-16 h-auto drop-shadow-lg" />
-                    </div>
+                {/* Top: Branding & Info */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <img src="/logo/logo.PNG" alt="Logo" className="w-12 h-auto drop-shadow-sm" />
+                  </div>
+                  <div className={`px-2 py-0.5 rounded-lg text-[7px] font-bold uppercase tracking-widest ${
+                    activeTheme === 'light' ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-white/60'
+                  }`}>
+                    {isGlobal ? 'Global' : 'Tourney'}
+                  </div>
+                </div>
 
-                    <div className="absolute bottom-0 left-0 right-0 flex overflow-hidden bg-white text-slate-950 border-t-2 border-slate-100">
-                      {/* Left Side: Identity */}
-                      <div className="w-[45%] p-5 border-r border-slate-200/20 flex flex-col justify-center relative">
-                        <h3 className="text-2xl font-black italic uppercase tracking-tighter leading-none mb-1">
-                          {player.name.split(' ')[0]}<br/>
-                          {player.name.split(' ').slice(1).join(' ')}
-                        </h3>
-                        <p className="text-[9px] font-bold opacity-60 mb-3">
-                          {new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })} VS COMPETITION
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-slate-950 text-white flex items-center justify-center border border-amber-500">
-                            <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                          </div>
-                          <div className="h-px flex-1 bg-slate-200/10" />
-                          <span className="text-[7px] font-black uppercase tracking-widest opacity-40 italic">Elite</span>
-                        </div>
-                      </div>
+                {/* Player Identity */}
+                <div className="mb-6">
+                  <h3 className={`text-4xl font-black italic uppercase tracking-tighter leading-tight ${
+                    activeTheme === 'light' ? 'text-slate-950' : 'text-white'
+                  }`}>
+                    {player.name}
+                  </h3>
+                </div>
 
-                      {/* Right Side: Stats Grid */}
-                      <div className="flex-1 p-5 grid grid-cols-2 gap-x-4 gap-y-4 items-center">
-                        <div className="flex flex-col">
-                          <span className="text-3xl font-black italic tabular-nums leading-none">{points}</span>
-                          <span className="text-[7px] font-black uppercase tracking-widest opacity-60 mt-1">Pts*</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-3xl font-black italic tabular-nums leading-none">{winRate}%</span>
-                          <span className="text-[7px] font-black uppercase tracking-widest opacity-60 mt-1">Win %</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xl font-black italic tabular-nums leading-none">{played}</span>
-                          <span className="text-[7px] font-black uppercase tracking-widest opacity-40 mt-0.5">Total Match</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className={`text-xl font-black italic tabular-nums leading-none ${diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : ''}`}>
-                            {diff > 0 ? '+' : ''}{diff}
-                          </span>
-                          <span className="text-[7px] font-black uppercase tracking-widest opacity-40 mt-0.5">Gm Diff</span>
-                        </div>
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-4 mb-4">
+                  <div className="flex flex-col">
+                    <span className={`text-[8px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>Points</span>
+                    <span className={`text-5xl font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : activeTheme === 'orange' ? 'text-slate-950' : 'text-amber-400'}`}>{points}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className={`text-[8px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>Win Rate</span>
+                    <span className={`text-5xl font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>{winRate}%</span>
+                  </div>
+                  
+                  <div className="col-span-2 grid grid-cols-2 gap-4 py-3 border-y border-current/10 mt-2">
+                    <div className="flex flex-col">
+                      <span className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/30'}`}>Total Matches</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className={`text-xl font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>{played}</span>
+                        <span className={`text-[8px] font-bold ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/40'}`}>({won}W)</span>
                       </div>
                     </div>
-                  </>
-                ) : (
-                  /* ORIGINAL COMPACT LAYOUT (For Dark, Light, Orange, Glass) */
-                  <>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-1.5">
-                        <Activity className={`w-4 h-4 ${activeTheme === 'light' ? 'text-amber-600' : 'text-amber-400'}`} />
-                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${
-                          activeTheme === 'light' ? 'text-slate-900' : 'text-white'
-                        }`}>
-                          Padel Livescore
-                        </span>
-                      </div>
-                      <div className={`px-2 py-0.5 rounded-lg text-[7px] font-bold uppercase tracking-widest ${
-                        activeTheme === 'light' ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-white/60'
-                      }`}>
-                        {isGlobal ? 'Global' : 'Tourney'}
-                      </div>
+                    <div className="flex flex-col">
+                      <span className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/30'}`}>Game Diff</span>
+                      <span className={`text-xl font-black italic tabular-nums leading-none ${diff > 0 ? 'text-green-500' : diff < 0 ? 'text-red-500' : activeTheme === 'light' ? 'text-slate-400' : 'text-white/40'}`}>
+                        {diff > 0 ? '+' : ''}{diff}
+                      </span>
                     </div>
+                  </div>
+                </div>
 
-                    <div className="mb-6">
-                      <h3 className={`text-4xl font-black italic uppercase tracking-tighter leading-tight ${
-                        activeTheme === 'light' ? 'text-slate-950' : 'text-white'
-                      }`}>
-                        {player.name}
-                      </h3>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-4 mb-4">
-                      <div className="flex flex-col">
-                        <span className={`text-[8px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>Points</span>
-                        <span className={`text-5xl font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : activeTheme === 'orange' ? 'text-slate-950' : 'text-amber-400'}`}>{points}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className={`text-[8px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>Win Rate</span>
-                        <span className={`text-5xl font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>{winRate}%</span>
-                      </div>
-                      
-                      <div className="col-span-2 grid grid-cols-2 gap-4 py-3 border-y border-white/5 mt-2">
-                        <div className="flex flex-col">
-                          <span className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/30'}`}>Matches</span>
-                          <div className="flex items-baseline gap-1">
-                            <span className={`text-xl font-black italic tabular-nums leading-none ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>{played}</span>
-                            <span className={`text-[8px] font-bold ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/40'}`}>({won}W)</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className={`text-[7px] font-bold uppercase tracking-widest mb-0.5 ${activeTheme === 'light' ? 'text-slate-400' : 'text-white/30'}`}>Diff</span>
-                          <span className={`text-xl font-black italic tabular-nums leading-none ${diff > 0 ? 'text-green-500' : diff < 0 ? 'text-red-500' : activeTheme === 'light' ? 'text-slate-400' : 'text-white/40'}`}>
-                            {diff > 0 ? '+' : ''}{diff}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Footer Fine Print - Removed or minimized */}
-                <div className={`mt-auto flex justify-end items-center opacity-40 ${activeTheme === 'transparent' ? 'pb-2' : ''}`}>
+                {/* Footer */}
+                <div className="mt-auto flex justify-end items-center opacity-40">
                   <span className={`text-[7px] font-black italic ${activeTheme === 'light' ? 'text-slate-950' : 'text-white'}`}>
                     Padel Livescore 2026
                   </span>
