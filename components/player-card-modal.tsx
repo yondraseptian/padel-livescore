@@ -139,7 +139,9 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true }: Pl
               )}
 
               {/* Content Layout (Strava Style) */}
-              <div className="relative z-10 h-full w-full p-8 flex flex-col">
+              <div className={`relative z-10 h-full w-full p-8 flex flex-col ${
+                activeTheme === 'transparent' ? 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]' : ''
+              }`}>
                 {/* Top: Branding */}
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-2">
@@ -158,33 +160,20 @@ export function PlayerCardModal({ player, isOpen, onClose, isGlobal = true }: Pl
                 </div>
 
                 {/* Middle: Player Identity */}
-                <div className="flex items-center gap-4 mb-10">
-                  <div className={`w-16 h-16 rounded-full border-2 overflow-hidden flex items-center justify-center shrink-0 ${
-                    activeTheme === 'light' ? 'border-slate-200 bg-slate-50' : 'border-white/20 bg-white/5'
-                  }`}>
-                    {player.avatar_url ? (
-                      <img src={player.avatar_url} alt={player.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className={`text-2xl font-bold ${activeTheme === 'light' ? 'text-slate-300' : 'text-slate-600'}`}>
-                        {player.name.charAt(0)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`text-2xl font-black italic uppercase tracking-tighter leading-none mb-1 truncate ${
-                      activeTheme === 'light' ? 'text-slate-950' : 'text-white'
+                <div className="flex flex-col mb-12">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award className={`w-4 h-4 ${activeTheme === 'light' ? 'text-amber-600' : 'text-amber-400'}`} />
+                    <span className={`text-[12px] font-bold uppercase tracking-widest ${
+                      activeTheme === 'light' ? 'text-slate-500' : 'text-white/50'
                     }`}>
-                      {player.name}
-                    </h3>
-                    <div className="flex items-center gap-1.5">
-                      <Award className={`w-3 h-3 ${activeTheme === 'light' ? 'text-amber-600' : 'text-amber-400'}`} />
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                        activeTheme === 'light' ? 'text-slate-500' : 'text-white/50'
-                      }`}>
-                        Elite Competitor
-                      </span>
-                    </div>
+                      Elite Competitor
+                    </span>
                   </div>
+                  <h3 className={`text-4xl font-black italic uppercase tracking-tighter leading-none mb-1 ${
+                    activeTheme === 'light' ? 'text-slate-950' : 'text-white'
+                  }`}>
+                    {player.name}
+                  </h3>
                 </div>
 
                 {/* Main Stats: The "Strava" Big Number Look */}
