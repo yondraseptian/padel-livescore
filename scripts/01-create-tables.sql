@@ -41,6 +41,7 @@ CREATE TABLE tournaments (
   point_per_match INT,
   normal_scoring_rule VARCHAR(50), -- first_to_4, best_of_3, etc.
   knockout_setting INT, -- 4, 8, 16, 32
+  gender_category VARCHAR(20) DEFAULT 'mixed', -- mixed, male, female
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

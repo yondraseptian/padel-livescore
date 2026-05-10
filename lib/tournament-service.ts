@@ -25,7 +25,8 @@ export async function createTournament(
   normalScoringRule: string | null,
   playersList: string[],
   knockoutSetting?: number | null,
-  groups?: { name: string, teams: string[] }[] | null
+  groups?: { name: string, teams: string[] }[] | null,
+  genderCategory: string = 'mixed'
 ): Promise<Tournament> {
   const { data, error } = await supabaseServer
     .from('tournaments')
@@ -39,7 +40,8 @@ export async function createTournament(
       scoring_type: scoringType,
       point_per_match: pointPerMatch,
       normal_scoring_rule: normalScoringRule,
-      knockout_setting: knockoutSetting
+      knockout_setting: knockoutSetting,
+      gender_category: genderCategory
     }])
     .select()
     .single();
