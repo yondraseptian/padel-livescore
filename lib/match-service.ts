@@ -293,6 +293,12 @@ export async function updateMatchScore(
 // Reset match scores
 export async function resetMatchScores(matchId: string): Promise<boolean> {
   try {
+    const { data: matchData } = await supabaseServer
+      .from('matches')
+      .select('tournament_id, match_type')
+      .eq('id', matchId)
+      .single();
+
     // Delete all scores for the match
     const { error: deleteError } = await supabaseServer
       .from('match_scores')
@@ -317,6 +323,14 @@ export async function resetMatchScores(matchId: string): Promise<boolean> {
     if (updateError) {
       console.error('Error resetting match status:', updateError);
       return false;
+    }
+
+    if (matchData?.tournament_id) {
+      if (matchData.match_type === 'individual') {
+        await recalculateIndividualStandings(matchData.tournament_id);
+      } else {
+        await recalculateTeamStandings(matchData.tournament_id);
+      }
     }
 
     return true;
@@ -357,6 +371,85 @@ export async function updateMatchStatus(
   }
 }
 
+// Recalculate all team standings for a tournament
+export async function recalculateTeamStandings(tournamentId: string): Promise<void> {
+  try {
+    const { data: matches, error: matchesError } = await supabaseServer
+      .from('matches')
+      .select(`*, match_scores (*), tournament:tournament_id (*)`)
+      .eq('tournament_id', tournamentId)
+      .eq('status', 'completed')
+      .neq('match_type', 'individual');
+
+    if (matchesError) {
+      console.error('Error fetching matches for recalculation:', matchesError);
+      return;
+    }
+
+    const teamStats: Record<string, { matches_played: number; matches_won: number; matches_lost: number; sets_won: number; sets_lost: number; points: number }> = {};
+
+    const getStats = (tId: string | null | undefined) => {
+      if (!tId) return null;
+      if (!teamStats[tId]) {
+        teamStats[tId] = { matches_played: 0, matches_won: 0, matches_lost: 0, sets_won: 0, sets_lost: 0, points: 0 };
+      }
+      return teamStats[tId];
+    };
+
+    for (const match of (matches || [])) {
+      const tournamentConfig = Array.isArray(match.tournament) ? match.tournament[0] : match.tournament;
+      const matchState = calculateMatchState(match.match_scores || [], tournamentConfig);
+
+      const isDraw = matchState.winner === 'draw';
+      const isTeam1Win = matchState.winner === 'team1';
+      const isTeam2Win = matchState.winner === 'team2';
+
+      const t1 = getStats(match.team1_id);
+      const t2 = getStats(match.team2_id);
+
+      if (t1) {
+        t1.matches_played += 1;
+        if (isTeam1Win) { t1.matches_won += 1; t1.points += 3; }
+        else if (isTeam2Win) t1.matches_lost += 1;
+        else if (isDraw) t1.points += 1;
+        t1.sets_won += matchState.team1Sets;
+        t1.sets_lost += matchState.team2Sets;
+      }
+
+      if (t2) {
+        t2.matches_played += 1;
+        if (isTeam2Win) { t2.matches_won += 1; t2.points += 3; }
+        else if (isTeam1Win) t2.matches_lost += 1;
+        else if (isDraw) t2.points += 1;
+        t2.sets_won += matchState.team2Sets;
+        t2.sets_lost += matchState.team1Sets;
+      }
+    }
+
+    const { data: stData } = await supabaseServer
+      .from('standings')
+      .select('team_id')
+      .eq('tournament_id', tournamentId);
+
+    const updates = (stData || []).map(st => {
+      const stats = teamStats[st.team_id] || { matches_played: 0, matches_won: 0, matches_lost: 0, sets_won: 0, sets_lost: 0, points: 0 };
+      return supabaseServer.from('standings').update({
+        matches_played: stats.matches_played,
+        matches_won: stats.matches_won,
+        matches_lost: stats.matches_lost,
+        sets_won: stats.sets_won,
+        sets_lost: stats.sets_lost,
+        points: stats.points,
+        updated_at: new Date().toISOString()
+      }).eq('tournament_id', tournamentId).eq('team_id', st.team_id);
+    });
+
+    await Promise.all(updates);
+  } catch (error) {
+    console.error('Error in recalculateTeamStandings:', error);
+  }
+}
+
 // Update standings after match completion
 export async function updateStandings(
   team1Id: string | undefined,
@@ -366,50 +459,129 @@ export async function updateStandings(
   team2SetsWon: number
 ): Promise<void> {
   try {
-    if (!team1Id || !team2Id) return;
+    if (!team1Id && !team2Id) return;
+    
+    // Find the tournament ID for these teams to run recalculation
+    const teamIdToUse = team1Id || team2Id;
+    if (!teamIdToUse) return;
 
-    if (matchWinner === 'draw') {
-      // Both teams get 1 match played, maybe a draw stat? 
-      // We don't have a draws column, so just update matches_played
-      const allTeams = [team1Id, team2Id];
-      for (const tId of allTeams) {
-        await supabaseServer
-          .from('standings')
-          .update({
-            matches_played: supabaseServer.from('standings').select('matches_played').eq('team_id', tId),
-            updated_at: new Date().toISOString(),
-          })
-          .eq('team_id', tId);
-      }
+    const { data: matchData } = await supabaseServer
+      .from('matches')
+      .select('tournament_id')
+      .or(`team1_id.eq.${teamIdToUse},team2_id.eq.${teamIdToUse}`)
+      .not('tournament_id', 'is', null)
+      .limit(1)
+      .single();
+
+    if (matchData?.tournament_id) {
+      await recalculateTeamStandings(matchData.tournament_id);
+    }
+  } catch (error) {
+    console.error('Update standings error:', error);
+  }
+}
+
+// Recalculate all individual standings for a tournament
+export async function recalculateIndividualStandings(tournamentId: string): Promise<void> {
+  try {
+    const { data: matches, error: matchesError } = await supabaseServer
+      .from('matches')
+      .select(`
+        *,
+        match_scores (*),
+        tournament:tournament_id (scoring_type, point_per_match, normal_scoring_rule)
+      `)
+      .eq('tournament_id', tournamentId)
+      .eq('status', 'completed')
+      .eq('match_type', 'individual');
+
+    if (matchesError) {
+      console.error('Error fetching matches for recalculation:', matchesError);
       return;
     }
 
-    const winnerTeamId = matchWinner === 'team1' ? team1Id : team2Id;
-    const loserTeamId = matchWinner === 'team1' ? team2Id : team1Id;
+    const playerStats: Record<string, {
+      matches_played: number;
+      matches_won: number;
+      matches_lost: number;
+      games_won: number;
+      games_lost: number;
+      points: number;
+    }> = {};
 
-    // Update winner
-    await supabaseServer
-      .from('standings')
-      .update({
-        matches_played: supabaseServer.from('standings').select('matches_played').eq('team_id', winnerTeamId),
-        matches_won: supabaseServer.from('standings').select('matches_won').eq('team_id', winnerTeamId).then((r) => (r.data?.[0]?.matches_won || 0) + 1),
-        sets_won: team1SetsWon === 2 ? 2 : 1, // Note: not quite right for point scoring, but works for normal
-        updated_at: new Date().toISOString(),
-      })
-      .eq('team_id', winnerTeamId);
+    const getStats = (pId: string | null | undefined) => {
+      if (!pId) return null;
+      if (!playerStats[pId]) {
+        playerStats[pId] = { matches_played: 0, matches_won: 0, matches_lost: 0, games_won: 0, games_lost: 0, points: 0 };
+      }
+      return playerStats[pId];
+    };
 
-    // Update loser
-    await supabaseServer
-      .from('standings')
-      .update({
-        matches_played: supabaseServer.from('standings').select('matches_played').eq('team_id', loserTeamId),
-        matches_lost: supabaseServer.from('standings').select('matches_lost').eq('team_id', loserTeamId).then((r) => (r.data?.[0]?.matches_lost || 0) + 1),
-        sets_lost: team1SetsWon === 2 ? 2 : 1, // Ditto
-        updated_at: new Date().toISOString(),
-      })
-      .eq('team_id', loserTeamId);
+    for (const match of (matches || [])) {
+      const tournamentConfig = Array.isArray(match.tournament) ? match.tournament[0] : match.tournament;
+      const matchState = calculateMatchState(match.match_scores || [], tournamentConfig);
+
+      const isDraw = matchState.winner === 'draw';
+      const isTeam1Win = matchState.winner === 'team1';
+      const isTeam2Win = matchState.winner === 'team2';
+
+      let t1Score = matchState.team1Sets;
+      let t2Score = matchState.team2Sets;
+      
+      if (matchState.isPointScoring) {
+        t1Score = matchState.currentGame?.team1Points || 0;
+        t2Score = matchState.currentGame?.team2Points || 0;
+      } else {
+        t1Score = matchState.allSets.reduce((sum, s) => sum + s.team1Games, 0);
+        t2Score = matchState.allSets.reduce((sum, s) => sum + s.team2Games, 0);
+      }
+
+      const t1Players = [match.team1_player1_id, match.team1_player2_id];
+      const t2Players = [match.team2_player1_id, match.team2_player2_id];
+
+      for (const pId of t1Players) {
+        const stats = getStats(pId);
+        if (!stats) continue;
+        stats.matches_played += 1;
+        if (isTeam1Win) { stats.matches_won += 1; stats.points += 3; }
+        else if (isTeam2Win) { stats.matches_lost += 1; }
+        else if (isDraw) { stats.points += 1; }
+        stats.games_won += t1Score;
+        stats.games_lost += t2Score;
+      }
+
+      for (const pId of t2Players) {
+        const stats = getStats(pId);
+        if (!stats) continue;
+        stats.matches_played += 1;
+        if (isTeam2Win) { stats.matches_won += 1; stats.points += 3; }
+        else if (isTeam1Win) { stats.matches_lost += 1; }
+        else if (isDraw) { stats.points += 1; }
+        stats.games_won += t2Score;
+        stats.games_lost += t1Score;
+      }
+    }
+
+    const { data: tpData } = await supabaseServer
+      .from('tournament_players')
+      .select('player_id')
+      .eq('tournament_id', tournamentId);
+
+    const updates = (tpData || []).map(tp => {
+      const stats = playerStats[tp.player_id] || { matches_played: 0, matches_won: 0, matches_lost: 0, games_won: 0, games_lost: 0, points: 0 };
+      return supabaseServer.from('tournament_players').update({
+        matches_played: stats.matches_played,
+        matches_won: stats.matches_won,
+        matches_lost: stats.matches_lost,
+        games_won: stats.games_won,
+        games_lost: stats.games_lost,
+        points: stats.points
+      }).eq('tournament_id', tournamentId).eq('player_id', tp.player_id);
+    });
+
+    await Promise.all(updates);
   } catch (error) {
-    console.error('Update standings error:', error);
+    console.error('Error in recalculateIndividualStandings:', error);
   }
 }
 
@@ -425,35 +597,9 @@ export async function updateTournamentPlayerStandings(
   team2Score: number = 0
 ): Promise<void> {
   try {
-    const updatePlayerStats = async (pId: string | undefined, isWin: boolean, isDraw: boolean, pointsWon: number, pointsLost: number) => {
-      if (!pId) return;
-      const { data } = await supabaseServer.from('tournament_players').select('*').eq('tournament_id', tournamentId).eq('player_id', pId).single();
-      if (data) {
-        let newPoints = data.points;
-        if (isWin) newPoints += 3;
-        else if (isDraw) newPoints += 1;
-
-        await supabaseServer.from('tournament_players').update({
-          points: newPoints,
-          matches_played: data.matches_played + 1,
-          matches_won: isWin ? data.matches_won + 1 : data.matches_won,
-          matches_lost: (!isWin && !isDraw) ? data.matches_lost + 1 : data.matches_lost,
-          games_won: data.games_won + pointsWon,
-          games_lost: data.games_lost + pointsLost,
-        }).eq('tournament_id', tournamentId).eq('player_id', pId);
-      }
-    };
-
-    const isDraw = matchWinner === 'draw';
-    
-    // Team 1 players
-    await updatePlayerStats(team1Player1Id, matchWinner === 'team1', isDraw, team1Score, team2Score);
-    await updatePlayerStats(team1Player2Id, matchWinner === 'team1', isDraw, team1Score, team2Score);
-
-    // Team 2 players
-    await updatePlayerStats(team2Player1Id, matchWinner === 'team2', isDraw, team2Score, team1Score);
-    await updatePlayerStats(team2Player2Id, matchWinner === 'team2', isDraw, team2Score, team1Score);
-
+    if (tournamentId) {
+      await recalculateIndividualStandings(tournamentId);
+    }
   } catch (error) {
     console.error('Update tournament player standings error:', error);
   }
