@@ -170,6 +170,8 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           matchId: match.id,
+          team1Sets: matchState?.team1Sets || 0,
+          team2Sets: matchState?.team2Sets || 0,
           team1Games: editT1Games,
           team2Games: editT2Games,
           team1Points: editT1Points,
@@ -439,41 +441,73 @@ export function ScoreInput({ match, onScoreUpdate }: ScoreInputProps) {
           <div className="p-4 border rounded-lg bg-muted/30 space-y-4">
             <h3 className="font-bold text-sm">Manual Score Override</h3>
             <div className="grid grid-cols-2 gap-4">
+              {!matchState.isPointScoring && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-xs">Team 1 Games</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-2 border rounded" 
+                      value={editT1Games} 
+                      onChange={e => setEditT1Games(parseInt(e.target.value) || 0)} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs">Team 2 Games</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-2 border rounded" 
+                      value={editT2Games} 
+                      onChange={e => setEditT2Games(parseInt(e.target.value) || 0)} 
+                    />
+                  </div>
+                </>
+              )}
               <div className="space-y-2">
-                <label className="text-xs">Team 1 Games</label>
-                <input 
-                  type="number" 
-                  className="w-full p-2 border rounded" 
-                  value={editT1Games} 
-                  onChange={e => setEditT1Games(parseInt(e.target.value) || 0)} 
-                />
+                <label className="text-xs">Team 1 Points</label>
+                {matchState.isPointScoring || matchState.currentSet.isTiebreaker ? (
+                  <input 
+                    type="number" 
+                    className="w-full p-2 border rounded" 
+                    value={editT1Points} 
+                    onChange={e => setEditT1Points(parseInt(e.target.value) || 0)} 
+                  />
+                ) : (
+                  <select 
+                    className="w-full p-2 border rounded"
+                    value={editT1Points}
+                    onChange={e => setEditT1Points(parseInt(e.target.value))}
+                  >
+                    <option value={0}>0</option>
+                    <option value={1}>15</option>
+                    <option value={2}>30</option>
+                    <option value={3}>40</option>
+                    <option value={4}>AD</option>
+                  </select>
+                )}
               </div>
               <div className="space-y-2">
-                <label className="text-xs">Team 2 Games</label>
-                <input 
-                  type="number" 
-                  className="w-full p-2 border rounded" 
-                  value={editT2Games} 
-                  onChange={e => setEditT2Games(parseInt(e.target.value) || 0)} 
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs">Team 1 Points (Tiebreaker/Point Scoring)</label>
-                <input 
-                  type="number" 
-                  className="w-full p-2 border rounded" 
-                  value={editT1Points} 
-                  onChange={e => setEditT1Points(parseInt(e.target.value) || 0)} 
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs">Team 2 Points (Tiebreaker/Point Scoring)</label>
-                <input 
-                  type="number" 
-                  className="w-full p-2 border rounded" 
-                  value={editT2Points} 
-                  onChange={e => setEditT2Points(parseInt(e.target.value) || 0)} 
-                />
+                <label className="text-xs">Team 2 Points</label>
+                {matchState.isPointScoring || matchState.currentSet.isTiebreaker ? (
+                  <input 
+                    type="number" 
+                    className="w-full p-2 border rounded" 
+                    value={editT2Points} 
+                    onChange={e => setEditT2Points(parseInt(e.target.value) || 0)} 
+                  />
+                ) : (
+                  <select 
+                    className="w-full p-2 border rounded"
+                    value={editT2Points}
+                    onChange={e => setEditT2Points(parseInt(e.target.value))}
+                  >
+                    <option value={0}>0</option>
+                    <option value={1}>15</option>
+                    <option value={2}>30</option>
+                    <option value={3}>40</option>
+                    <option value={4}>AD</option>
+                  </select>
+                )}
               </div>
             </div>
             <div className="flex gap-2">
