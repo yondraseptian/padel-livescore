@@ -25,6 +25,7 @@ export default function AdminTournamentsPage() {
   const [name, setName] = useState('');
   const [gameType, setGameType] = useState('tournament'); // 'tournament' | 'mabar'
   const [format, setFormat] = useState('americano'); // 'americano' | 'team_americano' | 'mexicano' | 'team_mexicano' | 'knockout' | 'group_stage'
+  const [genderCategory, setGenderCategory] = useState('mixed'); // 'male' | 'female' | 'mixed'
   const [tournamentDate, setTournamentDate] = useState('');
   const [numberOfCourts, setNumberOfCourts] = useState<number>(1);
   const [scoringType, setScoringType] = useState('normal'); // 'point' | 'normal'
@@ -137,6 +138,7 @@ export default function AdminTournamentsPage() {
           gameType,
           format,
           knockoutSetting: format === 'knockout' ? parseInt(knockoutSetting) : null,
+          genderCategory,
           groups: format === 'group_stage' ? groups.map(g => ({
             name: g.name,
             teams: g.teams.filter(t => t.trim() !== '')
@@ -282,6 +284,23 @@ export default function AdminTournamentsPage() {
                         <option value="team_mexicano">Team Mexicano</option>
                         <option value="knockout">Knockout</option>
                         <option value="group_stage">Group Stage</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="genderCategory">Kategori / Gender</Label>
+                      <select 
+                        id="genderCategory"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={genderCategory}
+                        onChange={(e) => setGenderCategory(e.target.value)}
+                        required
+                      >
+                        <option value="mixed">Campuran / Mixed</option>
+                        <option value="male">Pria / Cowok</option>
+                        <option value="female">Wanita / Cewek</option>
                       </select>
                     </div>
 

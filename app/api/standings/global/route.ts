@@ -5,12 +5,22 @@ export const revalidate = 120; // Revalidate every 2 minutes
 
 export async function GET(request: NextRequest) {
   try {
-    const { data: allTournamentPlayers, error } = await supabaseServer
+    const { searchParams } = new URL(request.url);
+    const gender = searchParams.get('gender') || 'all';
+
+    let query = supabaseServer
       .from('tournament_players')
       .select(`
         points, matches_played, matches_won, matches_lost, games_won, games_lost,
-        player:players (id, name, avatar_url)
+        player:players (id, name, avatar_url),
+        tournament:tournaments!inner (gender_category)
       `);
+
+    if (gender !== 'all') {
+      query = query.eq('tournament.gender_category', gender);
+    }
+
+    const { data: allTournamentPlayers, error } = await query;
 
     if (error) {
       throw error;

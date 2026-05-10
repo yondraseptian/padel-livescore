@@ -91,6 +91,7 @@ export interface Tournament {
   format: 'knockout' | 'liga' | 'americano' | 'mexicano' | 'team_americano' | 'team_mexicano';
   status: 'draft' | 'ongoing' | 'completed';
   knockout_setting?: number;
+  gender_category?: 'male' | 'female' | 'mixed';
   created_at: string;
   updated_at: string;
 }

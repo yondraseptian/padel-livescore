@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
       normalScoringRule,
       players,
       knockoutSetting,
-      groups
+      groups,
+      genderCategory
     } = await request.json();
 
     if (!name || !format) {
@@ -53,7 +54,8 @@ export async function POST(request: NextRequest) {
       normalScoringRule,
       players,
       knockoutSetting,
-      groups
+      groups,
+      genderCategory
     );
     return NextResponse.json(tournament);
   } catch (error: any) {

@@ -24,6 +24,7 @@ export function GlobalStandings() {
   const [selectedPlayer, setSelectedPlayer] = useState<GlobalStanding | null>(null);
   const [selectedRank, setSelectedRank] = useState<number | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [genderFilter, setGenderFilter] = useState('all'); // 'all' | 'male' | 'female'
 
   const handlePlayerClick = (player: GlobalStanding, rank: number) => {
     setSelectedPlayer(player);
@@ -32,24 +33,29 @@ export function GlobalStandings() {
   };
 
   useEffect(() => {
+    let isMounted = true;
     const fetchGlobalStandings = async () => {
+      setLoading(true);
       try {
-        const res = await fetch('/api/standings/global');
+        const res = await fetch(`/api/standings/global?gender=${genderFilter}`);
         const data = await res.json();
-        if (Array.isArray(data)) {
+        if (isMounted && Array.isArray(data)) {
           setStandings(data);
         }
       } catch (error) {
         console.error('Error fetching global standings:', error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchGlobalStandings();
     const interval = setInterval(fetchGlobalStandings, 120000);
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [genderFilter]);
 
   if (loading) {
     return (
@@ -71,6 +77,40 @@ export function GlobalStandings() {
 
   return (
     <div className="space-y-6">
+      {/* Gender Filter Tabs */}
+      <div className="flex bg-[#282c90]/5 p-1 rounded-xl w-full max-w-sm mx-auto mb-6">
+        <button
+          onClick={() => setGenderFilter('all')}
+          className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${
+            genderFilter === 'all' 
+              ? 'bg-[#48c4c4] text-white shadow-sm' 
+              : 'text-[#282c90]/50 hover:text-[#282c90] hover:bg-[#282c90]/5'
+          }`}
+        >
+          Semua
+        </button>
+        <button
+          onClick={() => setGenderFilter('male')}
+          className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${
+            genderFilter === 'male' 
+              ? 'bg-[#48c4c4] text-white shadow-sm' 
+              : 'text-[#282c90]/50 hover:text-[#282c90] hover:bg-[#282c90]/5'
+          }`}
+        >
+          Cowok
+        </button>
+        <button
+          onClick={() => setGenderFilter('female')}
+          className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${
+            genderFilter === 'female' 
+              ? 'bg-[#48c4c4] text-white shadow-sm' 
+              : 'text-[#282c90]/50 hover:text-[#282c90] hover:bg-[#282c90]/5'
+          }`}
+        >
+          Cewek
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         {standings.slice(0, 3).map((player, index) => (
           <div 
