@@ -23,6 +23,9 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
   // Modals
   const [isAddPlayerOpen, setIsAddPlayerOpen] = useState(false);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [newPlayerName, setNewPlayerName] = useState('');
+  const [creatingPlayer, setCreatingPlayer] = useState(false);
+
   const [generating, setGenerating] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [isGenerateRoundOpen, setIsGenerateRoundOpen] = useState(false);
@@ -86,6 +89,39 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
       await fetchData();
     } catch (error) {
       console.error('Failed to add players', error);
+    }
+  };
+
+  const handleCreateAndAddPlayer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPlayerName.trim()) return;
+
+    setCreatingPlayer(true);
+    try {
+      // Create player
+      const res = await fetch('/api/admin/players', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newPlayerName })
+      });
+      const newPlayer = await res.json();
+      
+      if (res.ok && newPlayer) {
+        // Add to tournament
+        await fetch(`/api/admin/tournaments/${id}/players`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ playerIds: [newPlayer.id] }),
+        });
+        setNewPlayerName('');
+        setIsAddPlayerOpen(false);
+        await fetchPlayers();
+        await fetchData();
+      }
+    } catch (err) {
+      console.error('Failed to create/add player', err);
+    } finally {
+      setCreatingPlayer(false);
     }
   };
 
@@ -295,6 +331,12 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-lg">Leaderboard</CardTitle>
+                {tournament.status !== 'completed' && (
+                  <Button variant="outline" size="sm" onClick={() => setIsAddPlayerOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Tambah Pemain
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 {players.length === 0 ? (
@@ -488,6 +530,64 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                 {savingMatchPlayers ? 'Menyimpan...' : 'Simpan Perubahan'}
               </Button>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Player Dialog */}
+        <Dialog open={isAddPlayerOpen} onOpenChange={setIsAddPlayerOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Tambah Pemain ke Turnamen</DialogTitle>
+              <DialogDescription>Buat pemain baru atau pilih pemain yang sudah ada.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6 pt-4">
+              <form onSubmit={handleCreateAndAddPlayer} className="space-y-2 border-b pb-6">
+                <Label htmlFor="newPlayerName">Buat Pemain Baru</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    id="newPlayerName" 
+                    placeholder="Nama pemain baru..."
+                    value={newPlayerName} 
+                    onChange={(e) => setNewPlayerName(e.target.value)} 
+                  />
+                  <Button type="submit" disabled={creatingPlayer || !newPlayerName.trim()}>
+                    {creatingPlayer ? 'Menyimpan...' : 'Buat & Tambah'}
+                  </Button>
+                </div>
+              </form>
+
+              <form onSubmit={handleAddPlayers} className="space-y-4">
+                <Label>Pilih Pemain yang Sudah Ada</Label>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded p-4 bg-muted/30">
+                  {unrolledPlayers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-2">Tidak ada pemain yang tersedia.</p>
+                  ) : (
+                    unrolledPlayers.map(p => (
+                      <div key={p.id} className="flex items-center space-x-2">
+                        <input 
+                          type="checkbox" 
+                          id={`player-${p.id}`} 
+                          checked={selectedPlayers.includes(p.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedPlayers([...selectedPlayers, p.id]);
+                            } else {
+                              setSelectedPlayers(selectedPlayers.filter(id => id !== p.id));
+                            }
+                          }}
+                        />
+                        <label htmlFor={`player-${p.id}`} className="text-sm font-medium leading-none cursor-pointer">
+                          {p.name}
+                        </label>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <Button type="submit" className="w-full" disabled={selectedPlayers.length === 0}>
+                  Tambahkan ({selectedPlayers.length} Pemain)
+                </Button>
+              </form>
+            </div>
           </DialogContent>
         </Dialog>
       </main>
