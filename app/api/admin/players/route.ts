@@ -64,3 +64,30 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    if (!(await isAdmin(request))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { name } = await request.json();
+
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: 'Player name is required' }, { status: 400 });
+    }
+
+    const { data: player, error } = await supabaseServer
+      .from('players')
+      .insert([{ name: name.trim() }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json(player);
+  } catch (error: any) {
+    console.error('Error creating player:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
